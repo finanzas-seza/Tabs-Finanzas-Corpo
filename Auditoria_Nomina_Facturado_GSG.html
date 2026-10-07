@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow">
+<title>Auditoría Nómina vs. Facturado · GSG</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B1F3A'/%3E%3Crect y='26' width='32' height='6' fill='%23E4222E'/%3E%3Cpath d='M7 22V14h4v8zm7 0V9h4v13zm7 0V12h4v10z' fill='white'/%3E%3C/svg%3E">
+<style>
+:root{color-scheme:light;
+  --navy:#0B1F3A;--red:#E4222E;--blue:#1F4E9C;--plane:#F4F6FA;--surface:#fff;
+  --ink:#0B1F3A;--ink2:#3d4c66;--muted:#66748c;--grid:#e6eaf1;--axis:#c5cddb;
+  --ring:rgba(11,31,58,.12);--wash:rgba(11,31,58,.05);--wash2:rgba(11,31,58,.10);
+  --c1:#ffb547;--good:#2E7D32;--crit:#D32F2F;--warn:#9a6300;--focus:#1F4E9C;
+  --good-bg:#E6F2E7;--crit-bg:#FBE6E6;--warn-bg:#FDF1DC;--blue-bg:rgba(31,78,156,.10);
+  --shadow:0 2px 10px rgba(11,31,58,.08);}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--plane);color:var(--ink);font:14px/1.45 Arial,Helvetica,sans-serif;padding-inline:16px;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.wrap{max-width:1280px;margin-inline:auto;padding-block:0 48px}
+.mono{font-family:Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:Arial,Helvetica,sans-serif;margin:0}
+a{color:var(--blue)}
+/* ---- encabezado ---- */
+header.top{position:sticky;top:0;z-index:20;background:var(--blue);margin-inline:-16px;padding:0 16px 10px;border-bottom:1px solid var(--grid);box-shadow:var(--shadow)}
+.bar3{display:flex;height:6px;margin-inline:-16px}.bar3 i{display:block;flex:1}
+.bar3 i:nth-child(1),.bar3 i:nth-child(3){background:var(--navy)}.bar3 i:nth-child(2){background:var(--red)}
+.back-row{max-width:1280px;margin:10px auto 0}
+.back-to-dashboard{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;text-decoration:none;font-size:13px;font-weight:700;transition:background .2s ease,color .2s ease,transform .2s ease}
+.back-to-dashboard:hover{background:#fff;color:var(--navy);transform:translateY(-1px)}
+.back-to-dashboard:focus-visible{outline-color:#fff}
+.toprow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px;margin-top:10px;max-width:1280px;margin-inline:auto}
+.kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--navy)}
+.brand h1{font-size:24px;line-height:1.2;margin:2px 0 0;font-weight:700;color:var(--navy)}
+.brand h1::after{content:"";display:block;width:44px;height:3px;background:var(--red);margin-top:5px;border-radius:2px}
+.brand .sub{display:block;color:var(--blue);font-size:12.5px;margin-top:6px}
+.logos{display:flex;align-items:center;gap:22px;flex-wrap:wrap}.logos img{height:30px;width:auto;display:block}.logos img.l-ship{height:26px}.logos img.l-gsg{height:40px}
+.filters{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-top:10px;max-width:1280px;margin-inline:auto}
+.fgroup{display:flex;align-items:center;gap:8px;min-width:0}
+.flabel{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pills,.seg{display:inline-flex;background:var(--wash);border-radius:8px;padding:2px;gap:2px;flex-wrap:wrap}
+.pill{border:0;background:transparent;padding:5px 11px;border-radius:6px;color:var(--ink2)}
+.pill:hover{background:var(--wash2)}
+.pill.active{background:var(--navy);color:#fff;box-shadow:0 0 0 1px var(--ring);font-weight:600}
+.hint-top{max-width:1280px;margin:16px auto 0;color:var(--ink2);font-size:12.5px}
+/* ---- rejilla y tarjetas ---- */
+.grid{display:grid;gap:16px}
+.grid.kpi{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.grid.detail{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid.top{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:1180px){.grid.kpi{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:940px){.grid.detail,.grid.top{grid-template-columns:1fr}}
+@media(max-width:640px){.grid.kpi{grid-template-columns:minmax(0,1fr)}.logos{flex-wrap:wrap}}
+.card,.rank-card{background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:16px;box-shadow:var(--shadow);min-width:0;display:flex;flex-direction:column;gap:8px}
+.card .label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--blue);font-weight:700;margin:0}
+.card .big{font-size:26px;font-weight:700;color:var(--navy);letter-spacing:-.02em;line-height:1.1;margin:0}
+.card .sub{font-size:12.5px;color:var(--ink2);margin:0}
+.card .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card .drill,.linklike{background:none;border:none;padding:0;color:var(--blue);font-weight:700;font-size:12.5px;text-align:left}
+.card .drill:hover,.linklike:hover{text-decoration:underline}
+#kpiGrid .card{border-top:5px solid var(--navy)}
+#kpiGrid .card:nth-child(2),#kpiGrid .card:nth-child(3){border-top-color:#1565c0}
+#kpiGrid .card:nth-child(2) .label,#kpiGrid .card:nth-child(3) .label{color:#1565c0}
+.tag{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:1px 9px;font-size:11px;text-transform:uppercase;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.tag.falt,.tag.neto-neg{background:var(--crit-bg);color:var(--crit)}
+.tag.sobr,.tag.neto-pos{background:var(--blue-bg);color:var(--blue)}
+.sg-pos{color:var(--blue);font-weight:700}.sg-neg{color:var(--crit);font-weight:700}.card .big.sg-pos{color:var(--blue)}.card .big.sg-neg{color:var(--crit)}
+.tag.neto-zero{background:var(--good-bg);color:var(--good)}
+.netcorte-list{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.netcorte-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:5px 8px;border-radius:8px}
+.netcorte-row.sel{background:var(--wash2)}
+.netcorte-row .v{font-weight:700}
+/* ---- secciones ---- */
+main>*{min-width:0}main{margin-top:22px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+section{margin-top:12px}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.sec-head h2{font-size:14px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.03em}
+.sec-note{font-size:12.5px;color:var(--ink2);max-width:56ch}
+/* ---- tablas ---- */
+.tablewrap{overflow-x:auto;border:1px solid var(--ring);border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:7px 10px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11px;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;background:var(--navy)}
+td{border-bottom:1px solid var(--grid)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--wash)}
+/* ---- proporción ---- */
+.propbar-row{display:grid;grid-template-columns:140px 1fr 90px;align-items:center;gap:12px;margin-bottom:10px}
+.propbar-row .name{font-weight:700;font-size:13px;color:var(--navy)}
+.propbar-track{height:12px;border-radius:6px;overflow:hidden;display:flex;background:var(--good-bg)}
+.propbar-fill{background:var(--c1);height:100%}
+.propbar-val{font-size:12.5px;text-align:right;color:var(--ink2)}
+.proplegend{display:flex;gap:18px;font-size:12px;color:var(--ink2);margin-top:6px}
+.proplegend span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+@media(max-width:520px){.propbar-row{grid-template-columns:96px 1fr 70px}}
+/* ---- ranking ---- */
+.rank-card h3{font-size:14px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.03em}
+.rank-row{display:grid;grid-template-columns:120px 1fr 90px;align-items:center;gap:8px;font-size:12.5px;padding:4px 0;cursor:pointer;border-radius:6px}
+.rank-row:hover{background:var(--wash)}
+.rank-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2)}
+.rank-bars{position:relative;height:16px;display:flex;align-items:center;background:transparent}
+.rank-mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--axis)}
+.rank-bar{height:9px;border-radius:3px;position:absolute;top:3.5px}
+.rank-bar.sobr{background:var(--blue);right:50%}
+.rank-bar.falt{background:var(--crit);left:50%}
+.rank-val{text-align:right;font-size:12px;font-weight:700;color:var(--ink2)}
+.rank-legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--grid)}
+/* ---- notas y pie ---- */
+footer#footer{margin-top:28px;background:var(--surface);border:1px solid var(--ring);border-left:3px solid var(--warn);border-radius:0 14px 14px 0;padding:12px 16px;font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+footer#footer p{margin:0}footer#footer strong{color:var(--navy)}
+.foot{margin-top:16px;padding:14px 18px;background:var(--navy);border-radius:14px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;color:#fff;font-size:12px}
+.foot img{height:26px;display:block}.foot .fl{display:flex;gap:22px;align-items:center;flex-wrap:wrap}.foot .fb{background:#fff;border-radius:8px;padding:6px 12px}
+/* ---- modal ---- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(11,31,58,.5);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;z-index:50;overflow-y:auto}
+.modal-backdrop[hidden]{display:none}
+.modal{background:var(--surface);border-radius:14px;max-width:820px;width:100%;box-shadow:0 6px 24px rgba(0,0,0,.18);margin-block:20px}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 10px}
+.modal-head h3{font-size:14px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.03em}
+.modal-head .sub{font-size:12.5px;color:var(--ink2);margin-top:4px}
+.modal-close{background:var(--wash);border:none;border-radius:999px;width:30px;height:30px;color:var(--ink2);flex:none}
+.modal-controls{display:flex;gap:10px;padding:0 18px 12px;flex-wrap:wrap}
+.modal-controls input{flex:1;min-width:160px;padding:6px 10px;border-radius:8px;border:1px solid var(--ring);background:var(--surface)}
+.modal-body{padding:0 18px 18px;max-height:60vh;overflow:auto}
+.modal-body th{cursor:pointer;user-select:none;position:sticky;top:0}
+.modal-body th.sorted::after{content:' ▾'}
+.modal-empty{padding:24px 4px;color:var(--muted);text-align:center}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.kicker{color:#fff}.brand h1{color:#fff}.brand .sub{color:#dce8fa}
+header.top .flabel{color:#dce8fa}
+header.top .pills{background:rgba(255,255,255,.16)}
+header.top .pill{color:#fff}
+header.top .pill:hover{background:rgba(255,255,255,.18)}
+header.top .pill.active{background:#fff;color:var(--navy);box-shadow:none}
+.hint-top strong{color:var(--navy)}
+</style>
+</head><body>
+<div class="wrap">
+<header class="top">
+  <div class="bar3"><i></i><i></i><i></i></div>
+  <div class="back-row">
+    <a href="index.html" class="back-to-dashboard" aria-label="Volver al tablero principal">← Volver al tablero</a>
+  </div>
+  <div class="toprow">
+    <div class="brand">
+      <span class="kicker">Finanzas · GSG</span>
+      <h1>Auditoría Nómina vs. Facturado</h1>
+      <span class="sub">Información actualizada hasta el 16 de septiembre de 2026</span>
+    </div>
+  </div>
+  <div class="filters">
+    <div class="fgroup"><span class="flabel">Corte</span><div class="pills" id="pills" role="group" aria-label="Corte"></div></div>
+  </div>
+</header>
+<p class="hint-top">GSG · Walmart y Bodega Aurrera. Agosto completo (5 cortes) y septiembre parcial (01-09 y 10-16). Solo unidades y días-operador; sin montos en pesos salvo el costo facturado de referencia. <strong>Diferencia = Facturado − Nómina.</strong> <strong>+ (azul): se facturó de más. − (rojo): falta facturar.</strong></p>
+<main>
+<section id="sec-kpi">
+  <div class="grid kpi" id="kpiGrid"></div>
+</section>
+
+<section id="sec-table">
+  <div class="sec-head">
+    <h2>Diferencias reales por tipo de cruce</h2>
+    <p class="sec-note">Dedicado ya viene neto de compensación entre familias de vehículo (Sedán / Camioneta 750 kg).</p>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Tipo de cruce</th><th>Faltante</th><th>Sobrante</th><th>Neto (Facturado − Nómina)</th><th></th></tr></thead>
+      <tbody id="tablaBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section id="sec-detalle">
+  <div class="sec-head"><h2>Detalle por tipo de cruce</h2></div>
+  <div class="grid detail" id="detailGrid"></div>
+</section>
+
+<section id="sec-prop">
+  <div class="sec-head">
+    <h2>Proporción de filas con diferencia</h2>
+    <p class="sec-note">% de filas de cada hoja que no concilian exacto en el periodo seleccionado.</p>
+  </div>
+  <div class="card" id="propCard"></div>
+</section>
+
+<section id="sec-top">
+  <div class="sec-head"><h2>Tiendas por magnitud de diferencia</h2></div>
+  <div class="grid top" id="topGrid"></div>
+</section>
+
+</main>
+<footer id="footer"></footer>
+<footer class="foot">
+  <span>Finanzas · GSG · Cifras de unidades-día y días-operador de Nómina, Productividad y Facturación de GSG; agosto y septiembre 2026 (parcial al 16).</span>
+</footer>
+
+
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <div>
+        <h3 id="modalTitle">Detalle</h3>
+        <p class="sub" id="modalSub"></p>
+      </div>
+      <button class="modal-close" id="modalClose" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-controls">
+      <input type="text" id="modalSearch" placeholder="Buscar tienda o determinante…">
+    </div>
+    <div class="modal-body">
+      <table id="modalTable">
+        <thead id="modalThead"></thead>
+        <tbody id="modalTbody"></tbody>
+      </table>
+      <div class="modal-empty" id="modalEmpty" hidden>Sin filas para este filtro.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {"cortes":["01-05 AGO","06-12 AGO","13-19 AGO","20-26 AGO","27-31 AGO","01-09 SEP","10-16 SEP"],"members":{"TOTAL":["01-05 AGO","06-12 AGO","13-19 AGO","20-26 AGO","27-31 AGO","01-09 SEP","10-16 SEP"],"AGOSTO":["01-05 AGO","06-12 AGO","13-19 AGO","20-26 AGO","27-31 AGO"],"SEPTIEMBRE":["01-09 SEP","10-16 SEP"],"01-05 AGO":["01-05 AGO"],"06-12 AGO":["06-12 AGO"],"13-19 AGO":["13-19 AGO"],"20-26 AGO":["20-26 AGO"],"27-31 AGO":["27-31 AGO"],"01-09 SEP":["01-09 SEP"],"10-16 SEP":["10-16 SEP"]},"ded":{"TOTAL":{"filas":115,"nom":2013,"fact":2064.0,"faltante":152.4,"sobrante":203.4,"neto":51,"conciliado_pct":51.3},"AGOSTO":{"filas":80,"nom":1086,"fact":1138.0,"faltante":138.0,"sobrante":190,"neto":52,"conciliado_pct":46.3},"SEPTIEMBRE":{"filas":35,"nom":927,"fact":926,"faltante":14.4,"sobrante":13.4,"neto":-1,"conciliado_pct":62.9},"01-05 AGO":{"filas":17,"nom":151,"fact":184.2,"faltante":22.8,"sobrante":56,"neto":33.2,"conciliado_pct":29.4},"06-12 AGO":{"filas":16,"nom":259,"fact":257,"faltante":39,"sobrante":37,"neto":-2,"conciliado_pct":25.0},"13-19 AGO":{"filas":16,"nom":183,"fact":254,"faltante":25,"sobrante":96,"neto":71,"conciliado_pct":25.0},"20-26 AGO":{"filas":16,"nom":296,"fact":256.6,"faltante":40.4,"sobrante":1,"neto":-39.4,"conciliado_pct":68.8},"27-31 AGO":{"filas":15,"nom":197,"fact":186.2,"faltante":10.8,"sobrante":0,"neto":-10.8,"conciliado_pct":86.7},"01-09 SEP":{"filas":16,"nom":499,"fact":494,"faltante":13,"sobrante":8,"neto":-5,"conciliado_pct":50.0},"10-16 SEP":{"filas":19,"nom":428,"fact":432,"faltante":1.4,"sobrante":5.4,"neto":4,"conciliado_pct":73.7}},"pxp":{"TOTAL":{"filas":19,"nom":273,"fact":303,"faltante":40,"sobrante":70,"neto":30,"ped_prod":4147,"ped_fact":3841,"conciliado_pct":52.6},"AGOSTO":{"filas":17,"nom":228,"fact":258,"faltante":40,"sobrante":70,"neto":30,"ped_prod":3702,"ped_fact":3306,"conciliado_pct":47.0},"SEPTIEMBRE":{"filas":2,"nom":45,"fact":45,"faltante":0,"sobrante":0,"neto":0,"ped_prod":445,"ped_fact":535,"conciliado_pct":100.0},"01-05 AGO":{"filas":3,"nom":22,"fact":43,"faltante":0,"sobrante":21,"neto":21,"ped_prod":510,"ped_fact":510,"conciliado_pct":33.3},"06-12 AGO":{"filas":3,"nom":45,"fact":59,"faltante":0,"sobrante":14,"neto":14,"ped_prod":698,"ped_fact":698,"conciliado_pct":33.3},"13-19 AGO":{"filas":3,"nom":20,"fact":55,"faltante":0,"sobrante":35,"neto":35,"ped_prod":739,"ped_fact":747,"conciliado_pct":33.3},"20-26 AGO":{"filas":4,"nom":69,"fact":58,"faltante":11,"sobrante":0,"neto":-11,"ped_prod":873,"ped_fact":749,"conciliado_pct":50.0},"27-31 AGO":{"filas":4,"nom":72,"fact":43,"faltante":29,"sobrante":0,"neto":-29,"ped_prod":882,"ped_fact":602,"conciliado_pct":75.0},"01-09 SEP":{"filas":1,"nom":27,"fact":27,"faltante":0,"sobrante":0,"neto":0,"conciliado_pct":100.0,"ped_prod":258,"ped_fact":331},"10-16 SEP":{"filas":1,"nom":18,"fact":18,"faltante":0,"sobrante":0,"neto":0,"conciliado_pct":100.0,"ped_prod":187,"ped_fact":204}},"comp":{"TOTAL":{"casos":0,"verde":0,"amarillo":0,"reetiquetado":0,"residual":0},"AGOSTO":{"casos":0,"verde":0,"amarillo":0,"reetiquetado":0,"residual":0},"SEPTIEMBRE":{"casos":0,"verde":0,"amarillo":0,"reetiquetado":0,"residual":0},"01-05 AGO":{"casos":0,"verde":0,"amarillo":0,"reetiquetado":0,"residual":0},"06-12 AGO":{"casos":0,"verde":0,"amarillo":0,"reetiquetado":0,"residual":0},"13-19 AGO":{"casos":0,"verde":0,"amarillo":0,"reetiquetado":0,"residual":0},"20-26 AGO":{"casos":0,"verde":0,"amarillo":0,"reetiquetado":0,"residual":0},"27-31 AGO":{"casos":0,"verde":0,"amarillo":0,"reetiquetado":0,"residual":0},"01-09 SEP":{"casos":0,"verde":0,"amarillo":0,"reetiquetado":0,"residual":0},"10-16 SEP":{"casos":0,"verde":0,"amarillo":0,"reetiquetado":0,"residual":0}},"hib":{"TOTAL":{"casos":3,"fact":10,"ped_fact":129,"nom":231},"AGOSTO":{"casos":0,"fact":0,"ped_fact":0,"nom":0},"SEPTIEMBRE":{"casos":3,"fact":10,"ped_fact":129,"nom":231},"01-05 AGO":{"casos":0,"nom":0,"fact":0,"ped_prod":0,"ped_fact":0},"06-12 AGO":{"casos":0,"nom":0,"fact":0,"ped_prod":0,"ped_fact":0},"13-19 AGO":{"casos":0,"nom":0,"fact":0,"ped_prod":0,"ped_fact":0},"20-26 AGO":{"casos":0,"nom":0,"fact":0,"ped_prod":0,"ped_fact":0},"27-31 AGO":{"casos":0,"nom":0,"fact":0,"ped_prod":0,"ped_fact":0},"01-09 SEP":{"casos":3,"fact":10,"ped_fact":129,"nom":231},"10-16 SEP":{"casos":0,"fact":0,"ped_fact":0,"nom":0}},"top_ded":{"TOTAL":[{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":81.0,"sobrante":0.0},{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","faltante":4.0,"sobrante":58.0},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","faltante":55.0,"sobrante":0.0},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","faltante":0.0,"sobrante":31.0},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","faltante":1.8,"sobrante":25.4},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","faltante":1.0,"sobrante":20.0},{"det":"4045","tienda":"Bodega Aurrera, Lomas Del Bosque [4045]","faltante":0.0,"sobrante":17.0},{"det":"3083","tienda":"Bodega Aurrera, San Andres [3083]","faltante":0.0,"sobrante":14.0}],"AGOSTO":[{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":76.0,"sobrante":0.0},{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","faltante":0.0,"sobrante":58.0},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","faltante":55.0,"sobrante":0.0},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","faltante":0.0,"sobrante":30.0},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","faltante":1.8,"sobrante":20.0},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","faltante":0.0,"sobrante":20.0},{"det":"4045","tienda":"Bodega Aurrera, Lomas Del Bosque [4045]","faltante":0.0,"sobrante":17.0},{"det":"3083","tienda":"Bodega Aurrera, San Andres [3083]","faltante":0.0,"sobrante":14.0}],"SEPTIEMBRE":[{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","faltante":0.0,"sobrante":5.4},{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":5.0,"sobrante":0.0},{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","faltante":3.0,"sobrante":2.0},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","faltante":0.0,"sobrante":4.0},{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","faltante":4.0,"sobrante":0.0},{"det":"2529","tienda":"Bodega Aurrera, Mieleras [2529]","faltante":0.0,"sobrante":1.0},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","faltante":1.0,"sobrante":0.0},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","faltante":0.0,"sobrante":1.0}],"01-05 AGO":[{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","faltante":0.0,"sobrante":17.0},{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":12.0,"sobrante":0.0},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","faltante":10.0,"sobrante":0.0},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","faltante":0.0,"sobrante":9.0},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","faltante":0.0,"sobrante":6.0},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","faltante":0.0,"sobrante":6.0},{"det":"4045","tienda":"Bodega Aurrera, Lomas Del Bosque [4045]","faltante":0.0,"sobrante":6.0},{"det":"1030","tienda":"Bodega Aurrera, Amecameca [1030]","faltante":0.0,"sobrante":3.0}],"06-12 AGO":[{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":25.0,"sobrante":0.0},{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","faltante":0.0,"sobrante":12.0},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","faltante":12.0,"sobrante":0.0},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","faltante":0.0,"sobrante":6.0},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","faltante":0.0,"sobrante":4.0},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","faltante":0.0,"sobrante":4.0},{"det":"4045","tienda":"Bodega Aurrera, Lomas Del Bosque [4045]","faltante":0.0,"sobrante":3.0},{"det":"1030","tienda":"Bodega Aurrera, Amecameca [1030]","faltante":0.0,"sobrante":2.0}],"13-19 AGO":[{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","faltante":0.0,"sobrante":29.0},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","faltante":0.0,"sobrante":15.0},{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":12.0,"sobrante":0.0},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","faltante":11.0,"sobrante":0.0},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","faltante":0.0,"sobrante":10.0},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","faltante":0.0,"sobrante":10.0},{"det":"3083","tienda":"Bodega Aurrera, San Andres [3083]","faltante":0.0,"sobrante":9.0},{"det":"4045","tienda":"Bodega Aurrera, Lomas Del Bosque [4045]","faltante":0.0,"sobrante":8.0}],"20-26 AGO":[{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":27.0,"sobrante":0.0},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","faltante":12.0,"sobrante":0.0},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","faltante":0.0,"sobrante":1.0},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","faltante":1.0,"sobrante":0.0},{"det":"4029","tienda":"Bodega Aurrera, Av Nacional [4029]","faltante":0.4,"sobrante":0.0}],"27-31 AGO":[{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","faltante":10.0,"sobrante":0.0},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","faltante":0.8,"sobrante":0.0}],"01-09 SEP":[{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":4,"sobrante":0},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","faltante":0,"sobrante":4},{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","faltante":4,"sobrante":0},{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","faltante":3,"sobrante":0},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","faltante":0,"sobrante":3},{"det":"2529","tienda":"Bodega Aurrera, Mieleras [2529]","faltante":0,"sobrante":1},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","faltante":1,"sobrante":0},{"det":"4198","tienda":"Bodega Aurrera, El Tenayo [4198]","faltante":1,"sobrante":0}],"10-16 SEP":[{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","faltante":0,"sobrante":2.4},{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","faltante":0,"sobrante":2},{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":1,"sobrante":0},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","faltante":0,"sobrante":1},{"det":"4029","tienda":"Bodega Aurrera, Av Nacional [4029]","faltante":0.4,"sobrante":0}]},"top_pxp":{"TOTAL":[{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","faltante":0.0,"sobrante":40.0},{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":39.0,"sobrante":0.0},{"det":"5801","tienda":"Walmart, Lopez Mateos Fundidores [5801]","faltante":0.0,"sobrante":30.0},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","faltante":1.0,"sobrante":0.0}],"AGOSTO":[{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","faltante":0.0,"sobrante":40.0},{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":39.0,"sobrante":0.0},{"det":"5801","tienda":"Walmart, Lopez Mateos Fundidores [5801]","faltante":0.0,"sobrante":30.0},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","faltante":1.0,"sobrante":0.0}],"SEPTIEMBRE":[],"01-05 AGO":[{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","faltante":0.0,"sobrante":12.0},{"det":"5801","tienda":"Walmart, Lopez Mateos Fundidores [5801]","faltante":0.0,"sobrante":9.0}],"06-12 AGO":[{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","faltante":0.0,"sobrante":8.0},{"det":"5801","tienda":"Walmart, Lopez Mateos Fundidores [5801]","faltante":0.0,"sobrante":6.0}],"13-19 AGO":[{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","faltante":0.0,"sobrante":20.0},{"det":"5801","tienda":"Walmart, Lopez Mateos Fundidores [5801]","faltante":0.0,"sobrante":15.0}],"20-26 AGO":[{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":10.0,"sobrante":0.0},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","faltante":1.0,"sobrante":0.0}],"27-31 AGO":[{"det":"1202","tienda":"Walmart, Horizonte [1202]","faltante":29.0,"sobrante":0.0}],"01-09 SEP":[],"10-16 SEP":[]},"top_comp":{"TOTAL":[],"AGOSTO":[],"SEPTIEMBRE":[],"01-05 AGO":[],"06-12 AGO":[],"13-19 AGO":[],"20-26 AGO":[],"27-31 AGO":[],"01-09 SEP":[],"10-16 SEP":[]},"prop_ded":{"TOTAL":{"con_diferencia":48.7,"conciliado":51.3},"AGOSTO":{"con_diferencia":53.7,"conciliado":46.3},"SEPTIEMBRE":{"con_diferencia":37.1,"conciliado":62.9},"01-05 AGO":{"con_diferencia":70.6,"conciliado":29.4},"06-12 AGO":{"con_diferencia":75.0,"conciliado":25.0},"13-19 AGO":{"con_diferencia":75.0,"conciliado":25.0},"20-26 AGO":{"con_diferencia":31.2,"conciliado":68.8},"27-31 AGO":{"con_diferencia":13.3,"conciliado":86.7},"01-09 SEP":{"con_diferencia":50.0,"conciliado":50.0},"10-16 SEP":{"con_diferencia":26.3,"conciliado":73.7}},"prop_pxp":{"TOTAL":{"con_diferencia":47.4,"conciliado":52.6},"AGOSTO":{"con_diferencia":53.0,"conciliado":47.0},"SEPTIEMBRE":{"con_diferencia":0.0,"conciliado":100.0},"01-05 AGO":{"con_diferencia":66.7,"conciliado":33.3},"06-12 AGO":{"con_diferencia":66.7,"conciliado":33.3},"13-19 AGO":{"con_diferencia":66.7,"conciliado":33.3},"20-26 AGO":{"con_diferencia":50.0,"conciliado":50.0},"27-31 AGO":{"con_diferencia":25.0,"conciliado":75.0},"01-09 SEP":{"con_diferencia":0.0,"conciliado":100.0},"10-16 SEP":{"con_diferencia":0.0,"conciliado":100.0}},"prop_comp":{"TOTAL":{"con_diferencia":0,"conciliado":100},"AGOSTO":{"con_diferencia":0,"conciliado":100},"SEPTIEMBRE":{"con_diferencia":0,"conciliado":100},"01-05 AGO":{"con_diferencia":0,"conciliado":100},"06-12 AGO":{"con_diferencia":0,"conciliado":100},"13-19 AGO":{"con_diferencia":0,"conciliado":100},"20-26 AGO":{"con_diferencia":0,"conciliado":100},"27-31 AGO":{"con_diferencia":0,"conciliado":100},"01-09 SEP":{"con_diferencia":0,"conciliado":100},"10-16 SEP":{"con_diferencia":0,"conciliado":100}},"detail":{"ded":[{"det":"1030","tienda":"Bodega Aurrera, Amecameca [1030]","corte":"01-05 AGO","vehiculo":"Sedán","nom":2,"fact":5,"neto":3},{"det":"1030","tienda":"Bodega Aurrera, Amecameca [1030]","corte":"06-12 AGO","vehiculo":"Sedán","nom":5,"fact":7,"neto":2},{"det":"1030","tienda":"Bodega Aurrera, Amecameca [1030]","corte":"13-19 AGO","vehiculo":"Sedán","nom":2,"fact":7,"neto":5},{"det":"1202","tienda":"Walmart, Horizonte [1202]","corte":"01-05 AGO","vehiculo":"Sedán","nom":12,"fact":0,"neto":-12},{"det":"1202","tienda":"Walmart, Horizonte [1202]","corte":"06-12 AGO","vehiculo":"Sedán","nom":25,"fact":0,"neto":-25},{"det":"1202","tienda":"Walmart, Horizonte [1202]","corte":"13-19 AGO","vehiculo":"Sedán","nom":12,"fact":0,"neto":-12},{"det":"1202","tienda":"Walmart, Horizonte [1202]","corte":"20-26 AGO","vehiculo":"Sedán","nom":27,"fact":0,"neto":-27},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","corte":"20-26 AGO","vehiculo":"Camioneta 750 kg","nom":6,"fact":7,"neto":1},{"det":"2529","tienda":"Bodega Aurrera, Mieleras [2529]","corte":"01-05 AGO","vehiculo":"Sedán","nom":2,"fact":5,"neto":3},{"det":"2529","tienda":"Bodega Aurrera, Mieleras [2529]","corte":"06-12 AGO","vehiculo":"Sedán","nom":5,"fact":7,"neto":2},{"det":"2529","tienda":"Bodega Aurrera, Mieleras [2529]","corte":"13-19 AGO","vehiculo":"Sedán","nom":2,"fact":7,"neto":5},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","corte":"01-05 AGO","vehiculo":"Sedán","nom":4,"fact":10,"neto":6},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","corte":"06-12 AGO","vehiculo":"Sedán","nom":10,"fact":14,"neto":4},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","corte":"13-19 AGO","vehiculo":"Sedán","nom":4,"fact":14,"neto":10},{"det":"3083","tienda":"Bodega Aurrera, San Andres [3083]","corte":"01-05 AGO","vehiculo":"Sedán","nom":2,"fact":5,"neto":3},{"det":"3083","tienda":"Bodega Aurrera, San Andres [3083]","corte":"06-12 AGO","vehiculo":"Sedán","nom":9,"fact":11,"neto":2},{"det":"3083","tienda":"Bodega Aurrera, San Andres [3083]","corte":"13-19 AGO","vehiculo":"Sedán","nom":2,"fact":11,"neto":9},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","corte":"01-05 AGO","vehiculo":"Sedán","nom":4,"fact":10,"neto":6},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","corte":"06-12 AGO","vehiculo":"Sedán","nom":10,"fact":14,"neto":4},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","corte":"13-19 AGO","vehiculo":"Sedán","nom":4,"fact":14,"neto":10},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","corte":"20-26 AGO","vehiculo":"Sedán","nom":13,"fact":12,"neto":-1},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","corte":"27-31 AGO","vehiculo":"Sedán","nom":10,"fact":9.2,"neto":-0.8},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","corte":"01-05 AGO","vehiculo":"Sedán","nom":6,"fact":15,"neto":9},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","corte":"06-12 AGO","vehiculo":"Sedán","nom":14,"fact":20,"neto":6},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","corte":"13-19 AGO","vehiculo":"Sedán","nom":6,"fact":21,"neto":15},{"det":"3654","tienda":"Bodega Aurrera, Villa del Carbon [3654]","corte":"01-05 AGO","vehiculo":"Sedán","nom":2,"fact":5,"neto":3},{"det":"3654","tienda":"Bodega Aurrera, Villa del Carbon [3654]","corte":"06-12 AGO","vehiculo":"Sedán","nom":5,"fact":7,"neto":2},{"det":"3654","tienda":"Bodega Aurrera, Villa del Carbon [3654]","corte":"13-19 AGO","vehiculo":"Sedán","nom":2,"fact":7,"neto":5},{"det":"4029","tienda":"Bodega Aurrera, Av Nacional [4029]","corte":"01-05 AGO","vehiculo":"Sedán","nom":10,"fact":9.2,"neto":-0.8},{"det":"4029","tienda":"Bodega Aurrera, Av Nacional [4029]","corte":"06-12 AGO","vehiculo":"Sedán","nom":14,"fact":12,"neto":-2},{"det":"4029","tienda":"Bodega Aurrera, Av Nacional [4029]","corte":"13-19 AGO","vehiculo":"Sedán","nom":14,"fact":12,"neto":-2},{"det":"4029","tienda":"Bodega Aurrera, Av Nacional [4029]","corte":"20-26 AGO","vehiculo":"Sedán","nom":12,"fact":11.6,"neto":-0.4},{"det":"4045","tienda":"Bodega Aurrera, Lomas Del Bosque [4045]","corte":"01-05 AGO","vehiculo":"Sedán","nom":3,"fact":9,"neto":6},{"det":"4045","tienda":"Bodega Aurrera, Lomas Del Bosque [4045]","corte":"06-12 AGO","vehiculo":"Sedán","nom":9,"fact":12,"neto":3},{"det":"4045","tienda":"Bodega Aurrera, Lomas Del Bosque [4045]","corte":"13-19 AGO","vehiculo":"Sedán","nom":2,"fact":10,"neto":8},{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","corte":"01-05 AGO","vehiculo":"Sedán","nom":12,"fact":29,"neto":17},{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","corte":"06-12 AGO","vehiculo":"Sedán","nom":30,"fact":42,"neto":12},{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","corte":"13-19 AGO","vehiculo":"Sedán","nom":12,"fact":41,"neto":29},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","corte":"01-05 AGO","vehiculo":"Camioneta 750 kg","nom":10,"fact":0,"neto":-10},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","corte":"06-12 AGO","vehiculo":"Camioneta 750 kg","nom":12,"fact":0,"neto":-12},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","corte":"13-19 AGO","vehiculo":"Camioneta 750 kg","nom":11,"fact":0,"neto":-11},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","corte":"20-26 AGO","vehiculo":"Camioneta 750 kg","nom":12,"fact":0,"neto":-12},{"det":"6467","tienda":"Sam´s, Cuernavaca [6467]","corte":"27-31 AGO","vehiculo":"Camioneta 750 kg","nom":10,"fact":0,"neto":-10},{"det":"1030","tienda":"Bodega Aurrera, Amecameca [1030]","corte":"01-09 SEP","vehiculo":"Sedán","nom":9,"fact":9,"neto":0},{"det":"1202","tienda":"Walmart, Horizonte [1202]","corte":"01-09 SEP","vehiculo":"Sedán","nom":64,"fact":60,"neto":-4},{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","corte":"01-09 SEP","vehiculo":"Sedán","nom":59,"fact":56,"neto":-3},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","corte":"01-09 SEP","vehiculo":"Camioneta 750 kg","nom":9,"fact":9,"neto":0},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","corte":"01-09 SEP","vehiculo":"Sedán","nom":108,"fact":112,"neto":4},{"det":"2529","tienda":"Bodega Aurrera, Mieleras [2529]","corte":"01-09 SEP","vehiculo":"Sedán","nom":8,"fact":9,"neto":1},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","corte":"01-09 SEP","vehiculo":"Sedán","nom":18,"fact":17,"neto":-1},{"det":"3083","tienda":"Bodega Aurrera, San Andres [3083]","corte":"01-09 SEP","vehiculo":"Sedán","nom":13,"fact":13,"neto":0},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","corte":"01-09 SEP","vehiculo":"Sedán","nom":13,"fact":16,"neto":3},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","corte":"01-09 SEP","vehiculo":"Sedán","nom":25,"fact":25,"neto":0},{"det":"3654","tienda":"Bodega Aurrera, Villa del Carbon [3654]","corte":"01-09 SEP","vehiculo":"Sedán","nom":9,"fact":9,"neto":0},{"det":"3783","tienda":"Bodega Aurrera, Santa Clara [3783]","corte":"01-09 SEP","vehiculo":"Sedán","nom":18,"fact":18,"neto":0},{"det":"4029","tienda":"Bodega Aurrera, Av Nacional [4029]","corte":"01-09 SEP","vehiculo":"Sedán","nom":18,"fact":18,"neto":0},{"det":"4045","tienda":"Bodega Aurrera, Lomas Del Bosque [4045]","corte":"01-09 SEP","vehiculo":"Sedán","nom":16,"fact":16,"neto":0},{"det":"4198","tienda":"Bodega Aurrera, El Tenayo [4198]","corte":"01-09 SEP","vehiculo":"Sedán","nom":37,"fact":36,"neto":-1},{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","corte":"01-09 SEP","vehiculo":"Sedán","nom":75,"fact":71,"neto":-4},{"det":"1030","tienda":"Bodega Aurrera, Amecameca [1030]","corte":"10-16 SEP","vehiculo":"Sedán","nom":7,"fact":7,"neto":0},{"det":"1107","tienda":"Walmart, Ixtapaluca [1107]","corte":"10-16 SEP","vehiculo":"Sedán","nom":7,"fact":7,"neto":0},{"det":"1202","tienda":"Walmart, Horizonte [1202]","corte":"10-16 SEP","vehiculo":"Sedán","nom":57,"fact":56,"neto":-1},{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","corte":"10-16 SEP","vehiculo":"Sedán","nom":51,"fact":53,"neto":2},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","corte":"10-16 SEP","vehiculo":"Camioneta 750 kg","nom":7,"fact":7,"neto":0},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","corte":"10-16 SEP","vehiculo":"Sedán","nom":89,"fact":89,"neto":0},{"det":"2529","tienda":"Bodega Aurrera, Mieleras [2529]","corte":"10-16 SEP","vehiculo":"Sedán","nom":6,"fact":6,"neto":0},{"det":"3018","tienda":"Bodega Aurrera, Libramiento [3018]","corte":"10-16 SEP","vehiculo":"Sedán","nom":14,"fact":14,"neto":0},{"det":"3083","tienda":"Bodega Aurrera, San Andres [3083]","corte":"10-16 SEP","vehiculo":"Sedán","nom":11,"fact":11,"neto":0},{"det":"3211","tienda":"Walmart, Independencia Torreon [3211]","corte":"10-16 SEP","vehiculo":"Sedán","nom":10,"fact":12.4,"neto":2.4},{"det":"3228","tienda":"Bodega Aurrera, Manto de la Virgen [3228]","corte":"10-16 SEP","vehiculo":"Sedán","nom":18,"fact":19,"neto":1},{"det":"3296","tienda":"Bodega Aurrera, Villas de Ayotla [3296]","corte":"10-16 SEP","vehiculo":"Sedán","nom":4,"fact":4,"neto":0},{"det":"3504","tienda":"Walmart, Jesus Del Monte [3504]","corte":"10-16 SEP","vehiculo":"Sedán","nom":3,"fact":3,"neto":0},{"det":"3654","tienda":"Bodega Aurrera, Villa del Carbon [3654]","corte":"10-16 SEP","vehiculo":"Sedán","nom":7,"fact":7,"neto":0},{"det":"3783","tienda":"Bodega Aurrera, Santa Clara [3783]","corte":"10-16 SEP","vehiculo":"Sedán","nom":13,"fact":13,"neto":0},{"det":"4029","tienda":"Bodega Aurrera, Av Nacional [4029]","corte":"10-16 SEP","vehiculo":"Sedán","nom":13,"fact":12.6,"neto":-0.4},{"det":"4045","tienda":"Bodega Aurrera, Lomas Del Bosque [4045]","corte":"10-16 SEP","vehiculo":"Sedán","nom":14,"fact":14,"neto":0},{"det":"4198","tienda":"Bodega Aurrera, El Tenayo [4198]","corte":"10-16 SEP","vehiculo":"Sedán","nom":29,"fact":29,"neto":0},{"det":"5040","tienda":"Walmart, Jimenez Cantu [5040]","corte":"10-16 SEP","vehiculo":"Sedán","nom":68,"fact":68,"neto":0}],"pxp":[{"det":"1202","tienda":"Walmart, Horizonte [1202]","corte":"20-26 AGO","nom":10,"fact":0,"neto":-10,"ped_prod":124,"ped_fact":0},{"det":"1202","tienda":"Walmart, Horizonte [1202]","corte":"27-31 AGO","nom":29,"fact":0,"neto":-29,"ped_prod":359,"ped_fact":0},{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","corte":"01-05 AGO","nom":8,"fact":20,"neto":12,"ped_prod":274,"ped_fact":274},{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","corte":"06-12 AGO","nom":20,"fact":28,"neto":8,"ped_prod":377,"ped_fact":377},{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","corte":"13-19 AGO","nom":8,"fact":28,"neto":20,"ped_prod":420,"ped_fact":428},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","corte":"20-26 AGO","nom":7,"fact":6,"neto":-1,"ped_prod":68,"ped_fact":68},{"det":"5801","tienda":"Walmart, Lopez Mateos Fundidores [5801]","corte":"01-05 AGO","nom":6,"fact":15,"neto":9,"ped_prod":151,"ped_fact":151},{"det":"5801","tienda":"Walmart, Lopez Mateos Fundidores [5801]","corte":"06-12 AGO","nom":15,"fact":21,"neto":6,"ped_prod":224,"ped_fact":224},{"det":"5801","tienda":"Walmart, Lopez Mateos Fundidores [5801]","corte":"13-19 AGO","nom":6,"fact":21,"neto":15,"ped_prod":250,"ped_fact":250},{"det":"5801","tienda":"Walmart, Lopez Mateos Fundidores [5801]","corte":"01-09 SEP","nom":27,"fact":27,"neto":0,"ped_prod":258,"ped_fact":331},{"det":"5801","tienda":"Walmart, Lopez Mateos Fundidores [5801]","corte":"10-16 SEP","nom":18,"fact":18,"neto":0,"ped_prod":187,"ped_fact":204}],"comp":[],"hib":[{"det":"1202","tienda":"Walmart, Horizonte [1202]","corte":"01-09 SEP","nom":64,"ped_prod":448,"fact":4,"ped_fact":40},{"det":"1683","tienda":"Walmart, Vicente Guerrero [1683]","corte":"01-09 SEP","nom":59,"ped_prod":451,"fact":5,"ped_fact":77},{"det":"2033","tienda":"Walmart, Plaza Oriente [2033]","corte":"01-09 SEP","nom":108,"ped_prod":62,"fact":1,"ped_fact":12}]}};
+
+const PERIODS = ['TOTAL','AGOSTO','SEPTIEMBRE', ...DATA.cortes];
+const inPeriod = (corte, p) => DATA.members[p].includes(corte);
+const isCorte = p => DATA.cortes.includes(p);
+let currentPeriod = 'TOTAL';
+
+const fmt = n => {
+  if (n === null || n === undefined) return '—';
+  const r = Math.round(n*10)/10;
+  return (r%1===0 ? r.toFixed(0) : r.toFixed(1)).replace('-','−');
+};
+const sg = n => n>0?'sg-pos':(n<0?'sg-neg':'');
+const fmtSigned = n => (n>0?'+':'') + fmt(n);
+const esc = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------------- pills ---------------- */
+function renderPills(){
+  const el = document.getElementById('pills');
+  el.innerHTML = PERIODS.map(p =>
+    `<button class="pill ${p===currentPeriod?'active':''}" aria-pressed="${p===currentPeriod}" data-period="${esc(p)}">${p==='TOTAL'?'AGO + SEP':esc(p)}</button>`
+  ).join('');
+  el.querySelectorAll('.pill').forEach(b=>b.addEventListener('click', ()=>{
+    currentPeriod = b.dataset.period; renderAll();
+  }));
+}
+
+/* ---------------- KPI row ---------------- */
+function netoGlobal(period){
+  return round1(DATA.ded[period].neto);
+}
+function round1(n){ return Math.round(n*10)/10; }
+
+function renderKPI(){
+  const el = document.getElementById('kpiGrid');
+  const netRows = DATA.cortes.map(c => {
+    const v = netoGlobal(c);
+    const cls = v>0?'neto-pos':(v<0?'neto-neg':'neto-zero');
+    return `<div class="netcorte-row ${c===currentPeriod?'sel':''}">
+      <span>${esc(c)}</span><span class="v tag ${cls}">${fmtSigned(v)}</span>
+    </div>`;
+  }).join('');
+
+  const d = DATA.ded[currentPeriod], p = DATA.pxp[currentPeriod];
+
+  el.innerHTML = `
+    <div class="card">
+      <p class="label">Resultado neto global por corte</p>
+      <p class="sub" style="margin:-4px 0 6px">Solo Dedicado (sin PXP, Híbrido ni Big Item)</p>
+      <div class="netcorte-list">${netRows}</div>
+    </div>
+    <div class="card">
+      <p class="label">Dedicado</p>
+      <p class="big ${sg(d.neto)}">${fmtSigned(d.neto)}</p>
+      <p class="sub">unidades-día neto · faltante ${fmt(d.faltante)} / sobrante ${fmt(d.sobrante)}</p>
+      <button class="drill" data-drill="ded">Ver detalle de tiendas →</button>
+    </div>
+    <div class="card">
+      <p class="label">PXP</p>
+      <p class="big ${sg(p.neto)}">${fmtSigned(p.neto)}</p>
+      <p class="sub">días-operador neto · faltante ${fmt(p.faltante)} / sobrante ${fmt(p.sobrante)}</p>
+      <button class="drill" data-drill="pxp">Ver detalle de tiendas →</button>
+    </div>
+    <div class="card">
+      <p class="label">Cruce Híbrido</p>
+      <p class="big">${DATA.hib[currentPeriod].casos}</p>
+      <p class="sub">tiendas con esquema distinto entre Nómina (día laborado) y Facturación (PXP) · no entra al neto</p>
+      <button class="drill" data-drill="hib">Ver detalle de casos →</button>
+    </div>`;
+  el.querySelectorAll('[data-drill]').forEach(b=>b.addEventListener('click', ()=>openDrilldown(b.dataset.drill, currentPeriod)));
+}
+
+/* ---------------- tabla diferencias reales ---------------- */
+function renderTabla(){
+  const rows = [
+    {key:'ded', name:'Dedicado (unidades-día)', d:DATA.ded[currentPeriod]},
+    {key:'pxp', name:'PXP (días-operador)', d:DATA.pxp[currentPeriod]},
+  ];
+  document.getElementById('tablaBody').innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.name}</td>
+      <td class="mono">${fmt(r.d.faltante)}</td>
+      <td class="mono">${fmt(r.d.sobrante)}</td>
+      <td class="mono ${sg(r.d.neto)}">${fmtSigned(r.d.neto)}</td>
+      <td><button class="linklike" data-drill="${r.key}">Ver detalle →</button></td>
+    </tr>`).join('') + `
+    <tr>
+      <td>Compensación entre vehículos</td>
+      <td class="mono">0</td><td class="mono">0</td><td class="mono">0</td>
+      <td><button class="linklike" data-drill="comp">Ver detalle →</button></td>
+    </tr>
+    <tr>
+      <td>Cruce Híbrido (esquema no coincide)</td>
+      <td class="mono" colspan="3" style="text-align:left">${DATA.hib[currentPeriod].casos} caso(s) · unidades vs pedidos no son comparables, no suman al neto</td>
+      <td><button class="linklike" data-drill="hib">Ver detalle →</button></td>
+    </tr>`;
+  document.querySelectorAll('#tablaBody [data-drill]').forEach(b=>b.addEventListener('click', ()=>openDrilldown(b.dataset.drill, currentPeriod)));
+}
+
+/* ---------------- tarjetas de detalle ---------------- */
+function renderDetail(){
+  const d = DATA.ded[currentPeriod], p = DATA.pxp[currentPeriod];
+  const compTotal = DATA.comp['TOTAL'];
+  document.getElementById('detailGrid').innerHTML = `
+    <div class="card">
+      <p class="label">Cruce Dedicado</p>
+      <div class="row"><span class="sub">Filas</span><span class="mono">${d.filas}</span></div>
+      <div class="row"><span class="sub">Nómina</span><span class="mono">${fmt(d.nom)}</span></div>
+      <div class="row"><span class="sub">Facturado</span><span class="mono">${fmt(d.fact)}</span></div>
+      <div class="row"><span class="sub">% conciliado</span><span class="mono">${d.conciliado_pct}%</span></div>
+      <div class="row"><span class="tag falt">Faltante ${fmt(d.faltante)}</span><span class="tag sobr">Sobrante ${fmt(d.sobrante)}</span></div>
+      <button class="drill" data-drill="ded">Ver detalle de tiendas →</button>
+    </div>
+    <div class="card">
+      <p class="label">Cruce PXP</p>
+      <div class="row"><span class="sub">Filas</span><span class="mono">${p.filas}</span></div>
+      <div class="row"><span class="sub">Nómina (días)</span><span class="mono">${fmt(p.nom)}</span></div>
+      <div class="row"><span class="sub">Facturado (días)</span><span class="mono">${fmt(p.fact)}</span></div>
+      <div class="row"><span class="sub">Pedidos Prod. / Fact.</span><span class="mono">${fmt(p.ped_prod)} / ${fmt(p.ped_fact)}</span></div>
+      <div class="row"><span class="tag falt">Faltante ${fmt(p.faltante)}</span><span class="tag sobr">Sobrante ${fmt(p.sobrante)}</span></div>
+      <button class="drill" data-drill="pxp">Ver detalle de tiendas →</button>
+    </div>
+    <div class="card">
+      <p class="label">Compensación entre vehículos</p>
+      <div class="row"><span class="sub">Casos totales</span><span class="mono">0</span></div>
+      <div class="row"><span class="sub">Unidades reetiquetadas</span><span class="mono">0</span></div>
+      <div class="row"><span class="sub">Residual neto</span><span class="mono">0</span></div>
+      <div class="row"><span class="tag neto-zero">🟢 0 TOTAL</span><span class="tag" style="background:var(--warn-bg);color:var(--warn)">🟡 0 PARCIAL</span></div>
+      <p class="sub" style="margin-top:2px">Total global agosto y septiembre (01-16): 0 casos. Solo Walmart Plaza Oriente [2033] factura las 2 familias de vehículo Dedicado (Sedán y Camioneta 750 kg) a la vez, y en ningún corte de agosto ni de septiembre Nómina/Facturado divergieron en signos opuestos entre ellas — la regla sigue activa.</p>
+      <button class="drill" data-drill="comp">Ver detalle de casos →</button>
+    </div>
+    <div class="card">
+      <p class="label">Cruce Híbrido</p>
+      <div class="row"><span class="sub">Casos</span><span class="mono">${DATA.hib[currentPeriod].casos}</span></div>
+      <div class="row"><span class="sub">Nómina (día laborado)</span><span class="mono">${fmt(DATA.hib[currentPeriod].nom)}</span></div>
+      <div class="row"><span class="sub">Facturado PXP (días)</span><span class="mono">${fmt(DATA.hib[currentPeriod].fact)}</span></div>
+      <div class="row"><span class="sub">Facturado PXP (pedidos)</span><span class="mono">${fmt(DATA.hib[currentPeriod].ped_fact)}</span></div>
+      <p class="sub" style="margin-top:2px">Pegaso facturó una porción PXP en estas tiendas, pero Nómina no etiqueta a ningún operador como PXP. No se compara contra Nómina: el descalce es de esquema, no de cantidad.</p>
+      <button class="drill" data-drill="hib">Ver detalle de casos →</button>
+    </div>`;
+  document.querySelectorAll('#detailGrid [data-drill]').forEach(b=>b.addEventListener('click', ()=>openDrilldown(b.dataset.drill, currentPeriod)));
+}
+
+/* ---------------- proporción con diferencia ---------------- */
+function renderProp(){
+  const rows = [
+    {name:'Cruce (Dedicado)', v: DATA.prop_ded[currentPeriod]},
+    {name:'Cruce PXP', v: DATA.prop_pxp[currentPeriod]},
+    {name:'Compensación', v: DATA.prop_comp[currentPeriod]},
+  ];
+  document.getElementById('propCard').innerHTML = rows.map(r => `
+    <div class="propbar-row">
+      <span class="name">${r.name}</span>
+      <span class="propbar-track"><span class="propbar-fill" style="width:${r.v.con_diferencia}%"></span></span>
+      <span class="propbar-val">${r.v.con_diferencia}% con dif.</span>
+    </div>`).join('') + `
+    <div class="proplegend">
+      <span><span class="swatch" style="background:var(--warn)"></span>Con diferencia</span>
+      <span><span class="swatch" style="background:var(--good-bg);border:1px solid var(--good)"></span>Conciliado</span>
+    </div>`;
+}
+
+/* ---------------- top tiendas ---------------- */
+function renderTop(){
+  const maxAbs = (rows) => Math.max(1, ...rows.map(r=>Math.max(r.faltante,r.sobrante)));
+  function rankHTML(rows, typeKey){
+    if(!rows.length) return `<p class="sub" style="padding:8px 0">Sin diferencias en este periodo.</p>`;
+    const m = maxAbs(rows);
+    return rows.map(r => {
+      const wF = (r.faltante/m*50).toFixed(1), wS = (r.sobrante/m*50).toFixed(1);
+      return `<div class="rank-row" data-drill="${typeKey}" data-store="${esc(r.tienda)}">
+        <span class="rank-name" title="${esc(r.tienda)}">${esc(r.tienda)}</span>
+        <span class="rank-bars">
+          <span class="rank-mid"></span>
+          <span class="rank-bar sobr" style="width:${wS}%"></span>
+          <span class="rank-bar falt" style="width:${wF}%"></span>
+        </span>
+        <span class="rank-val">${r.faltante?('−'+fmt(r.faltante)):''}${r.sobrante?('+'+fmt(r.sobrante)):''}</span>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('topGrid').innerHTML = `
+    <div class="rank-card">
+      <h3>Dedicado — top tiendas</h3>
+      <p class="sub" style="margin-bottom:8px">Faltante (rojo, derecha) vs sobrante (azul, izquierda), unidades-día</p>
+      ${rankHTML(DATA.top_ded[currentPeriod],'ded')}
+      <div class="rank-legend"><span>Top 8 por magnitud combinada</span></div>
+    </div>
+    <div class="rank-card">
+      <h3>PXP — top tiendas</h3>
+      <p class="sub" style="margin-bottom:8px">Faltante (rojo, derecha) vs sobrante (azul, izquierda), días-operador</p>
+      ${rankHTML(DATA.top_pxp[currentPeriod],'pxp')}
+      <div class="rank-legend"><span>Top 8 por magnitud combinada</span></div>
+    </div>`;
+  document.querySelectorAll('#topGrid [data-drill]').forEach(b=>b.addEventListener('click', ()=>openDrilldown(b.dataset.drill, currentPeriod, b.dataset.store)));
+}
+
+/* ---------------- footer ---------------- */
+function renderFooter(){
+  const detail = DATA.detail.ded.filter(r => inPeriod(r.corte,currentPeriod));
+  let maxF = null, maxS = null;
+  detail.forEach(r=>{
+    if(r.neto<0 && (!maxF || r.neto<maxF.neto)) maxF=r;
+    if(r.neto>0 && (!maxS || r.neto>maxS.neto)) maxS=r;
+  });
+  const bits = [];
+  if(maxF) bits.push(`mayor faltante: <strong>${esc(maxF.tienda)}</strong> (${fmtSigned(maxF.neto)} unidades-día)`);
+  if(maxS) bits.push(`mayor sobrante: <strong>${esc(maxS.tienda)}</strong> (${fmtSigned(maxS.neto)} unidades-día)`);
+  document.getElementById('footer').innerHTML = `
+    <p>${bits.length? 'Hallazgo del periodo — ' + bits.join(' · ') + '.' : 'Sin diferencias en Dedicado para este periodo.'}</p>
+    <p>Agosto cerrado (5 cortes) y septiembre parcial (2 cortes, 01-09 y 10-16). Sam's Cuernavaca [6467] queda fuera de septiembre por no contar con prefactura localizada. El cruce híbrido solo se calcula para septiembre; en agosto se muestra en cero.</p>
+    <p>Seguimiento agosto: Walmart Horizonte [1202] no tuvo ningún bloque de facturación en agosto pese a Nómina/Productividad activas los 5 cortes — es el único punto de seguimiento operativo real del mes.</p>
+    <p>Seguimiento septiembre: Horizonte [1202], Vicente Guerrero [1683] y Plaza Oriente [2033] aparecen en Híbrido solo en 01-09 (en 10-16 facturaron 100% Dedicado). Jesús del Monte [3504], Ixtapaluca [1107] y Villas de Ayotla [3296] no tienen actividad en 01-09 y arrancan en 10-16. Coacalco [3900] y Reforma [2465] no tienen actividad en ninguna fuente. En PXP, Lopez Mateos Fundidores [5801] concilia en días-operador, pero sus pedidos difieren: Productividad 258 vs Facturado 331 (01-09) y 187 vs 204 (10-16).</p>
+  `;
+}
+
+function renderAll(){
+  renderPills(); renderKPI(); renderTabla(); renderDetail(); renderProp(); renderTop(); renderFooter();
+}
+
+/* ================= DRILLDOWN MODAL ================= */
+const MODAL_CONFIG = {
+  ded: {
+    title: 'Cruce Dedicado — detalle por tienda',
+    cols: [
+      {k:'corte', label:'Corte'},{k:'tienda', label:'Tienda'},{k:'vehiculo', label:'Vehículo'},
+      {k:'nom', label:'Nómina', num:true},{k:'fact', label:'Facturado', num:true},{k:'neto', label:'Diferencia (Facturado − Nómina)', num:true, signed:true},
+    ],
+  },
+  pxp: {
+    title: 'Cruce PXP — detalle por tienda',
+    cols: [
+      {k:'corte', label:'Corte'},{k:'tienda', label:'Tienda'},
+      {k:'nom', label:'Días Nómina', num:true},{k:'fact', label:'Días Facturado', num:true},
+      {k:'neto', label:'Dif. días (Facturado − Nómina)', num:true, signed:true},
+      {k:'ped_prod', label:'Pedidos Prod.', num:true},{k:'ped_fact', label:'Pedidos Fact.', num:true},
+    ],
+  },
+  hib: {
+    title: 'Cruce Híbrido — esquema no coincide',
+    cols: [
+      {k:'corte', label:'Corte'},{k:'tienda', label:'Tienda'},
+      {k:'nom', label:'Nómina (día laborado)', num:true},{k:'ped_prod', label:'Pedidos Prod. PXP', num:true},
+      {k:'fact', label:'Fact. PXP (días)', num:true},{k:'ped_fact', label:'Fact. PXP (pedidos)', num:true},
+    ],
+  },
+  comp: {
+    title: 'Compensación entre Vehículos — detalle de casos',
+    cols: [
+      {k:'corte', label:'Corte'},{k:'tienda', label:'Tienda'},{k:'vehiculo', label:'Familia'},
+      {k:'nom', label:'Nómina', num:true},{k:'fact', label:'Facturado', num:true},{k:'neto', label:'Diferencia (Facturado − Nómina)', num:true, signed:true},
+    ],
+  },
+};
+let drillState = {typeKey:null, period:null, storeFilter:null, sortKey:null, sortDir:1, search:''};
+
+function getDrillRows(typeKey, period, storeFilter){
+  let rows = DATA.detail[typeKey];
+  rows = rows.filter(r=>inPeriod(r.corte,period));
+  if(storeFilter) rows = rows.filter(r=>r.tienda===storeFilter);
+  return rows;
+}
+
+function openDrilldown(typeKey, period, storeFilter){
+  drillState = {typeKey, period, storeFilter: storeFilter||null, sortKey:null, sortDir:1, search:''};
+  document.getElementById('modalSearch').value = '';
+  const cfg = MODAL_CONFIG[typeKey];
+  document.getElementById('modalTitle').textContent = cfg.title;
+  let subParts = [({TOTAL:'Todos los cortes (agosto y septiembre 2026)',AGOSTO:'Todos los cortes de agosto 2026',SEPTIEMBRE:'Todos los cortes de septiembre 2026 (01-16)'})[period] || period];
+  if(storeFilter) subParts.push(storeFilter);
+  document.getElementById('modalSub').textContent = subParts.join(' · ');
+  renderModalHead();
+  renderDrillTable();
+  document.getElementById('modalBackdrop').hidden = false;
+}
+function closeDrilldown(){ document.getElementById('modalBackdrop').hidden = true; }
+
+function renderModalHead(){
+  const cfg = MODAL_CONFIG[drillState.typeKey];
+  const cortesCol = !isCorte(drillState.period);
+  const cols = cfg.cols.filter(c => cortesCol || c.k!=='corte');
+  document.getElementById('modalThead').innerHTML = '<tr>' + cols.map(c =>
+    `<th data-key="${c.k}" class="${drillState.sortKey===c.k?'sorted':''}" style="text-align:${c.num?'right':'left'}">${c.label}</th>`
+  ).join('') + '</tr>';
+  document.getElementById('modalThead').querySelectorAll('th').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const k = th.dataset.key;
+      if(drillState.sortKey===k) drillState.sortDir *= -1; else { drillState.sortKey=k; drillState.sortDir=1; }
+      renderModalHead(); renderDrillTable();
+    });
+  });
+}
+
+function renderDrillTable(){
+  const cfg = MODAL_CONFIG[drillState.typeKey];
+  let rows = getDrillRows(drillState.typeKey, drillState.period, drillState.storeFilter);
+  const q = drillState.search.trim().toLowerCase();
+  if(q) rows = rows.filter(r => (r.tienda||'').toLowerCase().includes(q) || (r.det||'').toLowerCase().includes(q));
+  if(drillState.sortKey){
+    const k = drillState.sortKey, dir = drillState.sortDir;
+    rows = rows.slice().sort((a,b)=>{
+      const av=a[k], bv=b[k];
+      const sgn = cfg.cols.find(c=>c.k===k)?.signed;
+      if(typeof av==='number' && typeof bv==='number') return (sgn ? Math.abs(av)-Math.abs(bv) : av-bv)*dir;
+      return String(av||'').localeCompare(String(bv||''))*dir;
+    });
+  }
+  const cortesCol = !isCorte(drillState.period);
+  const cols = cfg.cols.filter(c => cortesCol || c.k!=='corte');
+  const tbody = document.getElementById('modalTbody');
+  const empty = document.getElementById('modalEmpty');
+  if(!rows.length){ tbody.innerHTML=''; empty.hidden=false; return; }
+  empty.hidden = true;
+  tbody.innerHTML = rows.map(r => '<tr>' + cols.map(c=>{
+    let v = r[c.k];
+    let cls = c.num?'mono':''; if(c.num){ if(c.signed){ cls += ' '+sg(v); v = fmtSigned(v);} else v = fmt(v);}
+    else v = esc(v);
+    return `<td style="text-align:${c.num?'right':'left'}" class="${cls}">${v}</td>`;
+  }).join('') + '</tr>').join('');
+}
+
+document.getElementById('modalClose').addEventListener('click', closeDrilldown);
+document.getElementById('modalBackdrop').addEventListener('click', e=>{ if(e.target.id==='modalBackdrop') closeDrilldown(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrilldown(); });
+document.getElementById('modalSearch').addEventListener('input', e=>{ drillState.search = e.target.value; renderDrillTable(); });
+
+renderAll();
+</script>
+
+</body></html>
+

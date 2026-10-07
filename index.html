@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Tablero Financiero | Grupo SEZA</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B1F3A'/%3E%3Crect y='26' width='32' height='6' fill='%23E4222E'/%3E%3Cpath d='M7 22V14h4v8zm7 0V9h4v13zm7 0V12h4v10z' fill='white'/%3E%3C/svg%3E">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f9;
+      color: #172033;
+      min-height: 100vh;
+    }
+
+    /* =========================
+       BARRA SUPERIOR
+    ========================= */
+
+    .top-bar {
+      height: 7px;
+      display: flex;
+      width: 100%;
+    }
+
+    .top-bar span:nth-child(1) {
+      flex: 1;
+      background: #172033;
+    }
+
+    .top-bar span:nth-child(2) {
+      flex: 1;
+      background: #c62828;
+    }
+
+    .top-bar span:nth-child(3) {
+      flex: 1;
+      background: #172033;
+    }
+
+    /* =========================
+       CONTENEDOR PRINCIPAL
+    ========================= */
+
+    .container {
+      width: min(1200px, 92%);
+      margin: 0 auto;
+      padding: 50px 0 40px;
+    }
+
+    /* =========================
+       ENCABEZADO
+    ========================= */
+
+    .header {
+      margin-bottom: 38px;
+    }
+
+    .eyebrow {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #c62828;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 52px);
+      line-height: 1.05;
+      color: #172033;
+      margin-bottom: 14px;
+    }
+
+    .subtitle {
+      max-width: 780px;
+      font-size: 16px;
+      line-height: 1.6;
+      color: #667085;
+    }
+
+    /* =========================
+       TARJETA RESUMEN
+    ========================= */
+
+    .summary {
+      background: #ffffff;
+      border: 1px solid #e4e7ec;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      box-shadow: 0 5px 20px rgba(23, 32, 51, 0.05);
+    }
+
+    .summary-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #172033;
+      margin-bottom: 5px;
+    }
+
+    .summary-text {
+      font-size: 13px;
+      color: #667085;
+    }
+
+    .summary-badge {
+      background: #fce8e8;
+      color: #a61b1b;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* =========================
+       GRID DE REPORTES
+    ========================= */
+
+    .reports-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    /* =========================
+       TARJETAS
+    ========================= */
+
+    .report-card {
+      background: #ffffff;
+      border: 1px solid #e4e7ec;
+      border-radius: 16px;
+      padding: 28px;
+      min-height: 235px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(23, 32, 51, 0.05);
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+    }
+
+    .report-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: #172033;
+    }
+
+    .report-card:hover {
+      transform: translateY(-4px);
+      border-color: #cbd2dc;
+      box-shadow: 0 12px 30px rgba(23, 32, 51, 0.10);
+    }
+
+    .report-card:nth-child(2)::before {
+      background: #c62828;
+    }
+
+    .report-card:nth-child(3)::before {
+      background: #172033;
+    }
+
+    .report-card:nth-child(4)::before {
+      background: #c62828;
+    }
+
+    /* =========================
+       ICONO
+    ========================= */
+
+    .report-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      background: #f1f3f6;
+      color: #172033;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 22px;
+    }
+
+    .report-card:nth-child(2) .report-icon,
+    .report-card:nth-child(4) .report-icon {
+      background: #fce8e8;
+      color: #c62828;
+    }
+
+    /* =========================
+       CONTENIDO
+    ========================= */
+
+    .report-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #98a2b3;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .report-title {
+      font-size: 21px;
+      line-height: 1.25;
+      color: #172033;
+      margin-bottom: 10px;
+    }
+
+    .report-description {
+      color: #667085;
+      font-size: 13px;
+      line-height: 1.55;
+      margin-bottom: 24px;
+    }
+
+    /* =========================
+       BOTÓN
+    ========================= */
+
+    .report-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      margin-top: auto;
+
+      min-height: 42px;
+      padding: 10px 17px;
+
+      background: #172033;
+      color: #ffffff;
+
+      border-radius: 9px;
+      text-decoration: none;
+
+      font-size: 13px;
+      font-weight: 700;
+
+      transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .report-button:hover {
+      background: #c62828;
+      transform: translateX(2px);
+    }
+
+    /* =========================
+       PIE
+    ========================= */
+
+    footer {
+      margin-top: 45px;
+      padding-top: 22px;
+      border-top: 1px solid #dfe3e8;
+
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+
+      color: #98a2b3;
+      font-size: 12px;
+    }
+
+    .footer-brand {
+      font-weight: 700;
+      color: #667085;
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================= */
+
+    @media (max-width: 760px) {
+
+      .container {
+        width: 90%;
+        padding-top: 35px;
+      }
+
+      .reports-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .report-card {
+        min-height: 220px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- BARRA SUPERIOR -->
+  <div class="top-bar">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+
+  <!-- CONTENIDO -->
+  <main class="container">
+
+    <!-- ENCABEZADO -->
+    <header class="header">
+
+      <div class="eyebrow">
+        Finanzas · Grupo SEZA
+      </div>
+
+      <h1>
+        Tablero de Auditorías
+      </h1>
+
+      <p class="subtitle">
+        Acceso centralizado a los reportes financieros y de auditoría.
+        Selecciona el tablero que deseas consultar.
+      </p>
+
+    </header>
+
+
+    <!-- RESUMEN -->
+    <section class="summary">
+
+      <div>
+        <div class="summary-title">
+          Reportes disponibles
+        </div>
+
+        <div class="summary-text">
+          Nómina vs. Facturado, auditorías por empresa y seguimiento de cobranza.
+        </div>
+      </div>
+
+      <div class="summary-badge">
+        4 tableros
+      </div>
+
+    </section>
+
+
+    <!-- REPORTES -->
+    <section class="reports-grid">
+
+
+      <!-- =========================
+           GSG
+      ========================== -->
+
+      <article class="report-card">
+
+        <div class="report-icon">
+          G
+        </div>
+
+        <div class="report-label">
+          Auditoría · GSG
+        </div>
+
+        <h2 class="report-title">
+          Auditoría Nómina vs. Facturado GSG
+        </h2>
+
+        <p class="report-description">
+          Consulta el cruce y análisis de nómina contra facturación
+          correspondiente a GSG.
+        </p>
+
+        <a
+          href="Auditoria_Nomina_Facturado_GSG.html"
+          class="report-button"
+        >
+          Abrir reporte →
+        </a>
+
+      </article>
+
+
+      <!-- =========================
+           SEZA
+      ========================== -->
+
+      <article class="report-card">
+
+        <div class="report-icon">
+          S
+        </div>
+
+        <div class="report-label">
+          Auditoría · SEZA
+        </div>
+
+        <h2 class="report-title">
+          Auditoría Nómina vs. Facturado SEZA
+        </h2>
+
+        <p class="report-description">
+          Consulta el análisis de diferencias entre nómina y facturación
+          para SEZA.
+        </p>
+
+        <a
+          href="Auditoria_Nomina_Facturado_SEZA.html"
+          class="report-button"
+        >
+          Abrir reporte →
+        </a>
+
+      </article>
+
+
+      <!-- =========================
+           SHIP
+      ========================== -->
+
+      <article class="report-card">
+
+        <div class="report-icon">
+          H
+        </div>
+
+        <div class="report-label">
+          Auditoría · SHIP
+        </div>
+
+        <h2 class="report-title">
+          Auditoría Nómina vs. Facturado SHIP
+        </h2>
+
+        <p class="report-description">
+          Consulta el cruce de nómina contra facturación
+          correspondiente a SHIP.
+        </p>
+
+        <a
+          href="Auditoria_Nomina_Facturado_SHIP.html"
+          class="report-button"
+        >
+          Abrir reporte →
+        </a>
+
+      </article>
+
+
+      <!-- =========================
+           COBRANZA
+      ========================== -->
+
+      <article class="report-card">
+
+        <div class="report-icon">
+          $
+        </div>
+
+        <div class="report-label">
+          Cobranza
+        </div>
+
+        <h2 class="report-title">
+          Tablero Cobranza
+        </h2>
+
+        <p class="report-description">
+          Consulta el tablero de cobranza y el calendario de seguimiento
+          de vencimientos y actividades.
+        </p>
+
+        <a
+          href="Tablero_Cobranza_Calendario_VF.html"
+          class="report-button"
+        >
+          Abrir tablero →
+        </a>
+
+      </article>
+
+
+    </section>
+
+
+    <!-- PIE -->
+    <footer>
+
+      <div class="footer-brand">
+        Finanzas · Grupo SEZA
+      </div>
+
+      <div>
+        Tablero principal de reportes
+      </div>
+
+    </footer>
+
+  </main>
+
+</body>
+</html>
