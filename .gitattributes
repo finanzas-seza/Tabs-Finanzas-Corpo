@@ -1,0 +1,5 @@
+# Normaliza fin de línea (evita diffs completos por LF/CRLF en Windows)
+* text=auto
+*.png binary
+*.jpg binary
+data/cobranza.js linguist-generated=true -diff
