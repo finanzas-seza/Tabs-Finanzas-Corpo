@@ -17,7 +17,12 @@ scripts/concentrar.py                 ← el concentrador
 
 ## Actualizar (cada corte)
 
-1. Copiar el CSV nuevo de la empresa a `data/fuentes/`. El concentrador toma el de fecha más reciente
+0. **Pagos de Walmart (Retail).** Tesorería deja los Retail en
+   `J:\Mi unidad\SEZA\00_Gestión de proyectos\03_Tesoreria\Comprobaciones\<EMPRESA>\Retail` (SEZA: `RETAIL WALMART`).
+   Correr `python scripts/actualizar_retail.py` (o `--check` para ver antes qué cambiaría). Toma el CSV más reciente de
+   cada empresa, marca Pagada lo que ya aparece en el Retail (folio + monto) y escribe un CSV nuevo con fecha de hoy.
+   Después actualizar `cortes` en `config.json` con la fecha que indica el script. Requiere `pip install pandas lxml openpyxl`.
+1. Si hubo ingesta completa (facturas nuevas, bancos, Cob), copiar el CSV nuevo de la empresa a `data/fuentes/`. El concentrador toma el de fecha más reciente
    de cada empresa. **Esta carpeta está en `.gitignore`**: el sitio es público en GitHub Pages y el detalle
    de cartera no debe quedar en el repositorio. Respaldar los CSV en la carpeta *Cartera cobranza* de cada empresa.
 2. Si cambió el corte, ajustar en `data/config.json`: `cortes`, `titulo_actualizacion` y, si entra un mes

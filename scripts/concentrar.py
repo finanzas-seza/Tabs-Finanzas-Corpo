@@ -22,10 +22,14 @@ CONFIG = RAIZ / "data" / "config.json"
 SALIDA = RAIZ / "data" / "cobranza.js"
 
 FUERA = "FUERA DE PERIODO"
-ESTATUS = ["Pagada", "Pendiente de pago", "Por revisar",
-           "Cancelada con sustitución", "Cancelada sin sustitución"]
+ESTATUS = ["Pagada", "Pendiente de pago", "En aclaración",
+           "Cancelada con sustitución", "Cancelada sin sustitución",
+           "Intercompañía", "No es factura por cobrar"]
+# Se muestran aparte y no suman en facturado, pagado ni pendiente
+FUERA_DE_CARTERA = {"Intercompañía", "No es factura por cobrar"}
 # Equivalencias con el estatus de la cartera (skill de ingesta)
-EQUIV = {"Pagado": "Pagada", "Vigente": "Pendiente de pago", "Pendiente": "Pendiente de pago"}
+EQUIV = {"Pagado": "Pagada", "Vigente": "Pendiente de pago", "Pendiente": "Pendiente de pago",
+         "Por revisar": "En aclaración"}
 MESES_ES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO",
             "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
 OBLIGATORIAS = ["empresa", "folio", "fecha_emision", "cliente", "subtotal", "estatus"]
@@ -107,6 +111,8 @@ def leer_empresa(emp, cfg):
             seg = (r.get("segmento") or "").strip() or emp
         es_fac = (r.get("es_por_cobrar") or "Sí").strip() or "Sí"
         es_fac = "Sí" if es_fac.lower() in ("sí", "si", "s", "1", "true") else "No"
+        if est.startswith("Cancelada") or est == "No es factura por cobrar":
+            es_fac = "No"   # canceladas y documentos que no son factura no suman en facturado
         val = (r.get("validacion") or "").strip()
         if est == "Pendiente de pago" and not val:
             val = "Sin pago en la fuente"
@@ -147,7 +153,7 @@ def acciones(det, cfg, empresas):
         cuenta = [sum(1 for r in det if r[0] == e and ok(r)) for e in empresas]
         usadas |= {r[8] for r in det if ok(r)}
         out.append([a["que"], a["accion"], cuenta])
-    sin = Counter(r[8] for r in det if r[3] == "Por revisar" and r[8] not in usadas)
+    sin = Counter(r[8] for r in det if r[3] == "En aclaración" and r[8] not in usadas)
     for v, n in sin.items():
         avisos.append(f"Validación sin acción asignada en config.json: '{v}' ({n} registros)")
     return out
@@ -189,7 +195,7 @@ def main():
                  agrega(det, lambda r: (r[0], r[6], r[2]), lambda r: r[3] == "Pendiente de pago")],
         # Calendario: solo clientes que pagan por calendario Walmart (plazos[...].cal = 1)
         "calag": agrega(det, lambda r: (r[12] or "Sin asignación", r[0], r[3]),
-                        lambda r: cfg["plazos"].get(f"{r[0]}|{r[6]}", {}).get("cal")),
+                        lambda r: cfg["plazos"].get(f"{r[0]}|{r[6]}", {}).get("cal") and r[3] not in FUERA_DE_CARTERA),
         "acc": acciones(det, cfg, empresas),
         "cal": cal,
         "cfg": {k: cfg[k] for k in ("cortes", "diasProximo", "gracia", "congelamientos", "plazos")},

@@ -179,10 +179,10 @@ const ML={ENERO:'Enero',FEBRERO:'Febrero',MARZO:'Marzo',ABRIL:'Abril',MAYO:'Mayo
 const MS=Object.fromEntries(Object.entries(ML).map(([k,v])=>[k,v.slice(0,3)]));
 const EMPS=[['Corporativo','Corporativo',''],['SEZA','SEZA','--seza'],['SHIP','SHIP','--ship'],['GSG','GSG','--gsg']];
 const ECOL={SEZA:'var(--seza-b)',SHIP:'var(--ship-b)',GSG:'var(--gsg-b)',Corporativo:'var(--ink2)'};
-const ST=['Pagada','Pendiente de pago','Por revisar','Cancelada con sustitución','Cancelada sin sustitución'];
+const ST=['Pagada','Pendiente de pago','En aclaración','Cancelada con sustitución','Cancelada sin sustitución'],XST=['Intercompañía','No es factura por cobrar'],ALL=ST.concat(XST);
 const SEGS=[['SEZA · Walmart','SEZA'],['SEZA · Otros clientes','SEZA'],['SHIP','SHIP'],['GSG','GSG']];
 const TABS=[['res','Resumen'],['emp','Empresas'],['mm','Mes a mes'],['cal','Calendario de cobranza'],['acc','Pendientes y acciones']];
-const st={emp:'Corporativo',meses:new Set(MES),tab:'res',drill:null,q:'',cat:'',page:0,cliEmp:'SEZA',sort:{k:7,dir:-1},sf:'',stat:new Set(ST),view:'fac',csort:{k:'imp',dir:-1},clisort:{k:'fact',dir:-1},cliF:'',plzOpen:false,sem:{mode:'fuente',fecha:'',prox:D.cfg.diasProximo,gracia:D.cfg.gracia}};
+const st={emp:'Corporativo',meses:new Set(MES),tab:'res',drill:null,q:'',cat:'',page:0,cliEmp:'SEZA',sort:{k:7,dir:-1},sf:'',stat:new Set(ALL),view:'fac',csort:{k:'imp',dir:-1},clisort:{k:'fact',dir:-1},cliF:'',plzOpen:false,sem:{mode:'fuente',fecha:'',prox:D.cfg.diasProximo,gracia:D.cfg.gracia}};
 const nfm=new Intl.NumberFormat('es-MX');
 const num=n=>nfm.format(Math.round(n));
 const money=v=>{const a=Math.abs(v),s=v<0?'−':'';return a>=1e6?s+'$'+(a/1e6).toFixed(a>=1e7?1:2)+' M':a>=1e3?s+'$'+num(a/1e3)+' mil':s+'$'+num(a)};
@@ -192,8 +192,8 @@ const allM=()=>MES.every(m=>st.meses.has(m));
 const inMes=r=>r[2]===OUT?allM():st.meses.has(r[2]);
 const inEmp=r=>st.emp==='Corporativo'||r[0]===st.emp;
 function sel(extra){return D.rows.filter(r=>inEmp(r)&&inMes(r)&&(!extra||extra(r)))}
-function agg(rows){const o={};ST.forEach(s=>o[s]={n:0,nf:0,imp:0});rows.forEach(r=>{const a=o[r[3]];a.n+=r[4];a.nf+=r[5];a.imp+=r[6]});o.fact=ST.reduce((s,k)=>s+o[k].imp,0);o.nfac=ST.reduce((s,k)=>s+o[k].nf,0);o.tot=ST.reduce((s,k)=>s+o[k].n,0);return o}
-const badge=s=>({'Pagada':'<span class="badge ok">Pagada</span>','Pendiente de pago':'<span class="badge wr">Pendiente</span>','Por revisar':'<span class="badge er">Por revisar</span>'}[s]||'<span class="badge">'+(s.includes('con')?'Cancelada con sust.':'Cancelada sin sust.')+'</span>');
+function agg(rows){const o={};ALL.forEach(s=>o[s]={n:0,nf:0,imp:0});rows.forEach(r=>{const a=o[r[3]];a.n+=r[4];a.nf+=r[5];a.imp+=r[6]});o.fact=ST.reduce((s,k)=>s+o[k].imp,0);o.nfac=ST.reduce((s,k)=>s+o[k].nf,0);o.tot=ST.reduce((s,k)=>s+o[k].n,0);return o}
+const badge=s=>({'Pagada':'<span class="badge ok">Pagada</span>','Pendiente de pago':'<span class="badge wr">Pendiente</span>','En aclaración':'<span class="badge er">En aclaración</span>','Intercompañía':'<span class="badge in">Intercompañía</span>','No es factura por cobrar':'<span class="badge">No es factura</span>'}[s]||'<span class="badge">'+(s.includes('con')?'Cancelada con sust.':'Cancelada sin sust.')+'</span>');
 /* tooltip */
 const tip=$('tip');
 function showTip(e){const t=e.currentTarget.dataset.tip;if(!t)return;const [h,...rows]=t.split('||');tip.innerHTML='<b>'+h+'</b>'+rows.map(x=>{const [c,l,v]=x.split('|');return '<div class="tr"><span><i style="background:'+c+'"></i>'+l+'</span><span>'+v+'</span></div>'}).join('');tip.style.opacity=1;moveTip(e)}
@@ -216,7 +216,7 @@ function vRes(){
  ['t-un','Pagado',money(a['Pagada'].imp),num(a['Pagada'].n)+' facturas',byMonth(x=>x['Pagada'].imp),'mb-un'],
  ['t-uai','Avance de pago',pct(a['Pagada'].imp/a.fact),'del importe facturado',byMonth(x=>x['Pagada'].imp/(x.fact||1)),'mb-uai'],
  ['t-marg','Pendiente de pago',money(a['Pendiente de pago'].imp),num(a['Pendiente de pago'].n)+' facturas',byMonth(x=>x['Pendiente de pago'].imp),'mb-marg'],
- ['t-gast','Por revisar',num(a['Por revisar'].n)+' registros',money(a['Por revisar'].imp)+' en facturas',byMonth(x=>x['Por revisar'].n),'mb-gast'],
+ ['t-gast','En aclaración',num(a['En aclaración'].n)+' registros',money(a['En aclaración'].imp)+' en facturas',byMonth(x=>x['En aclaración'].n),'mb-gast'],
  ['aside','Canceladas',num(a['Cancelada con sustitución'].n+a['Cancelada sin sustitución'].n),num(a['Cancelada sin sustitución'].n)+' sin sustitución',byMonth(x=>x['Cancelada con sustitución'].n+x['Cancelada sin sustitución'].n),'mb-navy']];
  let h='<section class="kpis">'+K.map(k=>`<div class="kpi ${k[0]}"><div class="k">${k[1]}</div><div class="n">${k[2]}</div><div class="s">${k[3]}</div>${mini(k[4],k[5])}</div>`).join('')+'</section>';
  h+='<div class="grid">'+c1()+c2()+'</div>';
@@ -224,7 +224,7 @@ function vRes(){
  return h;
 }
 function c1(){
- const v=MES.map(m=>({m,on:st.meses.has(m),...(()=>{const a=agg(D.rows.filter(r=>inEmp(r)&&r[2]===m));return {p:a['Pagada'].imp,w:a['Pendiente de pago'].imp,r:a['Por revisar'].imp}})()}));
+ const v=MES.map(m=>({m,on:st.meses.has(m),...(()=>{const a=agg(D.rows.filter(r=>inEmp(r)&&r[2]===m));return {p:a['Pagada'].imp,w:a['Pendiente de pago'].imp,r:a['En aclaración'].imp}})()}));
  const mx=Math.max(...v.map(o=>o.p+o.w+o.r),1);const stp=[1e5,2e5,5e5,1e6,2e6,5e6,1e7,2e7,5e7,1e8].find(s=>mx/s<=5)||1e8,top=Math.ceil(mx/stp)*stp;
  const W=600,H=270,L=52,R=8,T=22,Bm=28,pw=W-L-R,ph=H-T-Bm,bw=pw/MES.length*.5;
  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Importe por estatus y mes">`;
@@ -233,10 +233,10 @@ function c1(){
  v.forEach((o,i)=>{const cx=L+pw/MES.length*(i+.5),x=cx-bw/2;let y=T+ph;const op=o.on?1:.3;
   [[o.p,'var(--c0)'],[o.w,'var(--c1)'],[o.r,'var(--c2)']].forEach(([val,c])=>{const h=val/top*ph;if(h>0){y-=h;s+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${c}" opacity="${op}" rx="2"/>`}});
   s+=`<text class="tt" x="${cx}" y="${y-5}" text-anchor="middle" opacity="${op}">${money(o.p+o.w+o.r)}</text><text x="${cx}" y="${H-9}" text-anchor="middle">${ML[o.m]}</text>`;
-  s+=`<rect class="hit" tabindex="0" x="${cx-pw/MES.length/2}" y="${T}" width="${pw/MES.length}" height="${ph}" data-tip="${ML[o.m]}||var(--c0)|Pagada|${money(o.p)}||var(--c1)|Pendiente de pago|${money(o.w)}||var(--c2)|Por revisar|${money(o.r)}"/>`});
+  s+=`<rect class="hit" tabindex="0" x="${cx-pw/MES.length/2}" y="${T}" width="${pw/MES.length}" height="${ph}" data-tip="${ML[o.m]}||var(--c0)|Pagada|${money(o.p)}||var(--c1)|Pendiente de pago|${money(o.w)}||var(--c2)|En aclaración|${money(o.r)}"/>`});
  s+='</svg>';
- const t='<table><tr><th>Mes</th><th>Pagada</th><th>Pendiente</th><th>Por revisar</th><th>Total</th></tr>'+v.map(o=>`<tr><td>${ML[o.m]}</td><td>${money(o.p)}</td><td>${money(o.w)}</td><td>${money(o.r)}</td><td>${money(o.p+o.w+o.r)}</td></tr>`).join('')+'</table>';
- return chartCard('Importe por estatus y mes',(st.emp==='Corporativo'?'Corporativo':st.emp)+' · subtotal de facturas; meses fuera del filtro atenuados',lg('var(--c0)','Pagada')+lg('var(--c1)','Pendiente de pago')+lg('var(--c2)','Por revisar'),s,t,'s7');
+ const t='<table><tr><th>Mes</th><th>Pagada</th><th>Pendiente</th><th>En aclaración</th><th>Total</th></tr>'+v.map(o=>`<tr><td>${ML[o.m]}</td><td>${money(o.p)}</td><td>${money(o.w)}</td><td>${money(o.r)}</td><td>${money(o.p+o.w+o.r)}</td></tr>`).join('')+'</table>';
+ return chartCard('Importe por estatus y mes',(st.emp==='Corporativo'?'Corporativo':st.emp)+' · subtotal de facturas; meses fuera del filtro atenuados',lg('var(--c0)','Pagada')+lg('var(--c1)','Pendiente de pago')+lg('var(--c2)','En aclaración'),s,t,'s7');
 }
 function c2(){
  const items=[['SEZA','SEZA'],['SHIP','SHIP'],['GSG','GSG']].filter(([sg,e])=>st.emp==='Corporativo'||e===st.emp).map(([sg,e])=>{const a=agg(sel(r=>r[0]===sg));return {sg,e,q:a['Pagada'].imp/a.fact,f:a.fact,p:a['Pagada'].imp}}).filter(x=>isFinite(x.q));
@@ -251,11 +251,11 @@ function avisos(){
  return '<section class="notes">'+A.map(a=>`<div class="note ${a[0]}"><b>${a[1]}</b> ${a[2]}</div>`).join('')+'</section>';
 }
 function vEmp(){
- let h='<div class="ecards">'+EMPS.slice(1).map(([e,l,co])=>{const a=agg(D.rows.filter(r=>r[0]===e&&inMes(r)));return `<button type="button" class="ecard" style="--co:var(${co})" data-e="${e}"><span class="k">${l}</span><span class="n">${money(a.fact)}</span><span class="s">Pagado ${pct(a['Pagada'].imp/a.fact)} · Pendiente ${money(a['Pendiente de pago'].imp)}</span><span class="s">${num(a['Por revisar'].n)} por revisar</span></button>`}).join('')+'</div>';
+ let h='<div class="ecards">'+EMPS.slice(1).map(([e,l,co])=>{const a=agg(D.rows.filter(r=>r[0]===e&&inMes(r)));return `<button type="button" class="ecard" style="--co:var(${co})" data-e="${e}"><span class="k">${l}</span><span class="n">${money(a.fact)}</span><span class="s">Pagado ${pct(a['Pagada'].imp/a.fact)} · Pendiente ${money(a['Pendiente de pago'].imp)}</span><span class="s">${num(a['En aclaración'].n)} en aclaración</span></button>`}).join('')+'</div>';
  const rows=[['Corporativo',null]].concat(SEGS.map(([sg,e])=>[sg,sg]));
  const CE=['SEZA','SHIP','GSG'].map(e=>({label:e,a:agg(D.rows.filter(r=>r[0]===e&&inMes(r)))}));
- h+='<div class="grid">'+chartCard('Composición del importe por empresa','Porcentaje pagado sobre lo facturado; la pista gris son canceladas',LEG3,hstack(CE.map(x=>({label:x.label,den:x.a.fact,parts:PART(x.a)})),'pct'),tblParts(CE,'Empresa'),'s4')+'<div class="card s8"><div class="chead"><div><h2>Comparativo por empresa</h2><div class="hint">Según los meses seleccionados.</div></div></div><div class="tw"><table><tr><th>Empresa</th><th>Facturado</th><th>Pagado</th><th>Avance</th><th>Pendiente</th><th>Por revisar</th><th>Canceladas</th></tr>';
- ['SEZA','SHIP','GSG','Corporativo'].forEach(sg=>{const a=agg(D.rows.filter(r=>inMes(r)&&(sg==='Corporativo'||r[0]===sg)));h+=`<tr class="${sg==='Corporativo'?'sub':''}"><td>${sg==='Corporativo'?'Corporativo (suma de las tres)':sg}</td><td>${money(a.fact)}</td><td>${money(a['Pagada'].imp)}</td><td>${pct(a['Pagada'].imp/a.fact)}</td><td>${money(a['Pendiente de pago'].imp)}</td><td>${num(a['Por revisar'].n)}</td><td>${num(a['Cancelada con sustitución'].n+a['Cancelada sin sustitución'].n)}</td></tr>`});
+ h+='<div class="grid">'+chartCard('Composición del importe por empresa','Porcentaje pagado sobre lo facturado; la pista gris son canceladas',LEG3,hstack(CE.map(x=>({label:x.label,den:x.a.fact,parts:PART(x.a)})),'pct'),tblParts(CE,'Empresa'),'s4')+'<div class="card s8"><div class="chead"><div><h2>Comparativo por empresa</h2><div class="hint">Según los meses seleccionados.</div></div></div><div class="tw"><table><tr><th>Empresa</th><th>Facturado</th><th>Pagado</th><th>Avance</th><th>Pendiente</th><th>En aclaración</th><th>Canceladas</th></tr>';
+ ['SEZA','SHIP','GSG','Corporativo'].forEach(sg=>{const a=agg(D.rows.filter(r=>inMes(r)&&(sg==='Corporativo'||r[0]===sg)));h+=`<tr class="${sg==='Corporativo'?'sub':''}"><td>${sg==='Corporativo'?'Corporativo (suma de las tres)':sg}</td><td>${money(a.fact)}</td><td>${money(a['Pagada'].imp)}</td><td>${pct(a['Pagada'].imp/a.fact)}</td><td>${money(a['Pendiente de pago'].imp)}</td><td>${num(a['En aclaración'].n)}</td><td>${num(a['Cancelada con sustitución'].n+a['Cancelada sin sustitución'].n)}</td></tr>`});
  return h+'</table></div></div></div>'+cliCard()+detalleEstatus();
 }
 function hstack(items,mode){
@@ -270,15 +270,15 @@ function hstack(items,mode){
   s+=`<rect class="hit" tabindex="0" x="0" y="${y}" width="${W}" height="${rh-2}" data-tip="${it.label}||${it.parts.map(p=>p.c+'|'+p.n+'|'+money(p.v)).join('||')}"/>`});
  return s+'</svg>';
 }
-const PART=(a)=>[{v:a['Pagada'].imp,c:'var(--c0)',n:'Pagada'},{v:a['Pendiente de pago'].imp,c:'var(--c1)',n:'Pendiente de pago'},{v:a['Por revisar'].imp,c:'var(--c2)',n:'Por revisar'}];
-const LEG3=lg('var(--c0)','Pagada')+lg('var(--c1)','Pendiente de pago')+lg('var(--c2)','Por revisar');
-function tblParts(rows,first){return `<table><tr><th>${first}</th><th>Pagada</th><th>Pendiente</th><th>Por revisar</th><th>Total</th></tr>`+rows.map(r=>{const p=PART(r.a);return `<tr><td>${r.label}</td>${p.map(x=>'<td>'+money(x.v)+'</td>').join('')}<td>${money(p.reduce((s,x)=>s+x.v,0))}</td></tr>`}).join('')+'</table>'}
-const CLIK=[['Cliente','c'],['Empresa','e'],['Facturado','fact'],['Pagado','pag'],['Avance','av'],['Pendiente','pen'],['Por revisar (reg.)','rev'],['Canceladas (reg.)','can']];
+const PART=(a)=>[{v:a['Pagada'].imp,c:'var(--c0)',n:'Pagada'},{v:a['Pendiente de pago'].imp,c:'var(--c1)',n:'Pendiente de pago'},{v:a['En aclaración'].imp,c:'var(--c2)',n:'En aclaración'}];
+const LEG3=lg('var(--c0)','Pagada')+lg('var(--c1)','Pendiente de pago')+lg('var(--c2)','En aclaración');
+function tblParts(rows,first){return `<table><tr><th>${first}</th><th>Pagada</th><th>Pendiente</th><th>En aclaración</th><th>Total</th></tr>`+rows.map(r=>{const p=PART(r.a);return `<tr><td>${r.label}</td>${p.map(x=>'<td>'+money(x.v)+'</td>').join('')}<td>${money(p.reduce((s,x)=>s+x.v,0))}</td></tr>`}).join('')+'</table>'}
+const CLIK=[['Cliente','c'],['Empresa','e'],['Facturado','fact'],['Pagado','pag'],['Avance','av'],['Pendiente','pen'],['En aclaración (reg.)','rev'],['Canceladas (reg.)','can']];
 function cliList(){
  const corp=st.cliEmp==='Corporativo';
  const rows=D.cli.filter(r=>(corp||r[0]===st.cliEmp)&&(r[2]===OUT?allM():st.meses.has(r[2])));
  const m={};rows.forEach(r=>{const k=r[0]+'|'+r[1];(m[k]=m[k]||[]).push(r)});
- const L=Object.entries(m).map(([k,rs])=>{const a=agg(rs);return {k,e:rs[0][0],c:rs[0][1],a,fact:a.fact,pag:a['Pagada'].imp,av:a.fact?a['Pagada'].imp/a.fact:0,pen:a['Pendiente de pago'].imp,rev:a['Por revisar'].n,can:a['Cancelada con sustitución'].n+a['Cancelada sin sustitución'].n}});
+ const L=Object.entries(m).map(([k,rs])=>{const a=agg(rs);return {k,e:rs[0][0],c:rs[0][1],a,fact:a.fact,pag:a['Pagada'].imp,av:a.fact?a['Pagada'].imp/a.fact:0,pen:a['Pendiente de pago'].imp,rev:a['En aclaración'].n,can:a['Cancelada con sustitución'].n+a['Cancelada sin sustitución'].n}});
  return {corp,rows,L,T:agg(rows)};
 }
 function cliSortedL(L){const k=st.clisort.k,d=st.clisort.dir;return L.slice().sort((x,y)=>{const u=x[k],v=y[k];const c=typeof u==='number'&&typeof v==='number'?u-v:String(u).localeCompare(String(v),'es');return (c||x.c.localeCompare(y.c,'es'))*d})}
@@ -289,24 +289,24 @@ function cliCard(){
  const sk=(l,k)=>`<th style="cursor:pointer" tabindex="0" role="button" data-cs="${k}" aria-sort="${st.clisort.k===k?(st.clisort.dir>0?'ascending':'descending'):'none'}">${l} ${st.clisort.k===k?(st.clisort.dir>0?'▲':'▼'):'<span style="opacity:.45">↕</span>'}</th>`;
  let h='<div class="grid">'+chartCard('Composición por cliente','Importe de '+ttl+' por estatus, de mayor a menor facturado',LEG3,hstack(CL.map(x=>({label:x.label,parts:PART(x.a)})),'abs'),tblParts(CL,'Cliente'),'s4')+'<div class="card s8"><div class="chead"><div><h2>Resumen por cliente</h2><div class="hint">Elige la empresa o el corporativo. Según los meses seleccionados. Clic en un cliente para ver sus facturas y su estatus.</div></div><div class="seg" id="cliSeg" role="group" aria-label="Empresa del resumen por cliente">'+['SEZA','SHIP','GSG','Corporativo'].map(e=>`<button type="button" class="emp" style="--co:var(${e==='Corporativo'?'--ink2':'--'+e.toLowerCase()})" data-ce="${e}" aria-pressed="${st.cliEmp===e}"><span class="dot"></span>${e}</button>`).join('')+'</div></div>'
  +`<div class="dtools"><label class="fld"><span class="flabel">Ordenar por</span><select id="cliSel">${CLIK.filter(x=>corp||x[1]!=='e').map(([l,k])=>`<option value="${k}"${st.clisort.k===k?' selected':''}>${l}</option>`).join('')}</select></label><button class="ghost" type="button" id="cliDir">${st.clisort.dir<0?'Mayor a menor ▼':'Menor a mayor ▲'}</button><button class="ghost" type="button" id="cliexp">⬇ Exportar CSV</button></div>`
- +'<div class="tw"><table><tr>'+sk('Cliente','c')+(corp?sk('Empresa','e'):'')+sk('Facturado','fact')+sk('Pagado','pag')+sk('Avance','av')+sk('Pendiente','pen')+sk('Por revisar','rev')+sk('Canceladas','can')+'</tr>';
+ +'<div class="tw"><table><tr>'+sk('Cliente','c')+(corp?sk('Empresa','e'):'')+sk('Facturado','fact')+sk('Pagado','pag')+sk('Avance','av')+sk('Pendiente','pen')+sk('En aclaración','rev')+sk('Canceladas','can')+'</tr>';
  const rowH=(o)=>`<tr class="click" tabindex="0" role="button" data-ckey="${o.k.replace(/"/g,'&quot;')}" aria-label="Ver facturas de ${o.c}"><td>${o.c} <span class="mut" style="font-size:12px">▸ ver facturas</span></td>${corp?`<td>${o.e}</td>`:''}<td>${money(o.fact)}</td><td>${money(o.pag)}</td><td>${pct(o.av)}</td><td>${money(o.pen)}</td><td>${num(o.rev)}</td><td>${num(o.can)}</td></tr>`;
  LS.forEach(o=>h+=rowH(o));
- h+=`<tr class="sub"><td>Total ${ttl}</td>${corp?'<td></td>':''}<td>${money(T.fact)}</td><td>${money(T['Pagada'].imp)}</td><td>${pct(T.fact?T['Pagada'].imp/T.fact:0)}</td><td>${money(T['Pendiente de pago'].imp)}</td><td>${num(T['Por revisar'].n)}</td><td>${num(T['Cancelada con sustitución'].n+T['Cancelada sin sustitución'].n)}</td></tr></table></div></div></div>`;
+ h+=`<tr class="sub"><td>Total ${ttl}</td>${corp?'<td></td>':''}<td>${money(T.fact)}</td><td>${money(T['Pagada'].imp)}</td><td>${pct(T.fact?T['Pagada'].imp/T.fact:0)}</td><td>${money(T['Pendiente de pago'].imp)}</td><td>${num(T['En aclaración'].n)}</td><td>${num(T['Cancelada con sustitución'].n+T['Cancelada sin sustitución'].n)}</td></tr></table></div></div></div>`;
  return h;
 }
 function detalleEstatus(){
  const a=agg(sel());let h='<div class="card"><div class="chead"><div><h2>Detalle por estatus</h2><div class="hint">'+(st.emp==='Corporativo'?'Corporativo':st.emp)+' · '+[...MES].filter(m=>st.meses.has(m)).map(m=>MS[m]).join(', ')+' · clic en un estatus para ver su detalle</div></div></div><div class="tw"><table><tr><th>Estatus</th><th>Registros</th><th>Facturas</th><th>Importe (subtotal)</th><th>% del importe</th></tr>';
- ST.forEach(k=>h+=`<tr class="click" tabindex="0" role="button" data-s="${k}" aria-selected="${st.drill&&st.stat.size===1&&st.stat.has(k)}"><td>${badge(k)} <span class="mut" style="font-size:12px">${st.drill&&st.stat.size===1&&st.stat.has(k)?'▾ abierto':'▸ ver detalle'}</span></td><td>${num(a[k].n)}</td><td>${num(a[k].nf)}</td><td>${a[k].imp?money(a[k].imp):'–'}</td><td>${a[k].imp?pct(a[k].imp/a.fact):'–'}</td></tr>`);
+ ALL.forEach(k=>h+=`<tr class="click" tabindex="0" role="button" data-s="${k}" aria-selected="${st.drill&&st.stat.size===1&&st.stat.has(k)}"><td>${badge(k)} <span class="mut" style="font-size:12px">${st.drill&&st.stat.size===1&&st.stat.has(k)?'▾ abierto':'▸ ver detalle'}</span></td><td>${num(a[k].n)}</td><td>${num(a[k].nf)}</td><td>${a[k].imp?money(a[k].imp):'–'}</td><td>${a[k].imp&&ST.includes(k)?pct(a[k].imp/a.fact):'–'}</td></tr>`);
  h+=`<tr class="sub"><td>Total</td><td>${num(a.tot)}</td><td>${num(a.nfac)}</td><td>${money(a.fact)}</td><td>100%</td></tr></table></div>`;
- if(allM()&&(st.emp==='Corporativo'||st.emp==='GSG'))h+='<div class="hint" style="margin-top:8px">Incluye 2 facturas de GSG con fecha fuera de periodo, en revisión.</div>';
+ h+='<div class="hint" style="margin-top:8px">Intercompañía y documentos que no son factura se listan aparte y no suman en el total.</div>';
  h+='<div style="margin-top:10px"><button class="ghost" type="button" id="dopenall">Ver y exportar el detalle de todas las facturas</button></div>';return h+'</div>'+(st.drill?drillCard():'');
 }
 function vMM(){
  const ms=MES.map(m=>({m,a:agg(D.rows.filter(r=>inEmp(r)&&r[2]===m))}));
  const dl=(c,p,inv)=>{if(p===undefined)return '<span class="mut">–</span>';const d=c-p;if(!d)return '<span class="delta flat">= 0</span>';const up=d>0,good=inv?!up:up;return `<span class="delta ${good?'up':'dn'}">${up?'▲':'▼'} ${money(Math.abs(d))}</span>`};
- let h='<div class="card"><div class="chead"><div><h2>Comportamiento mes a mes</h2><div class="hint">'+(st.emp==='Corporativo'?'Corporativo':st.emp)+' · variación contra el mes anterior. Una baja de pendiente o de por revisar es favorable.</div></div></div><div class="tw"><table><tr><th>Mes</th><th>Facturado</th><th>Pagado</th><th>Avance</th><th>Pendiente</th><th>Δ pendiente</th><th>Por revisar</th></tr>';
- ms.forEach((o,i)=>{const p=i?ms[i-1].a:null;h+=`<tr><td>${ML[o.m]}</td><td>${money(o.a.fact)}</td><td>${money(o.a['Pagada'].imp)}</td><td>${pct(o.a['Pagada'].imp/o.a.fact)}</td><td>${money(o.a['Pendiente de pago'].imp)}</td><td>${dl(o.a['Pendiente de pago'].imp,p?p['Pendiente de pago'].imp:undefined,true)}</td><td>${num(o.a['Por revisar'].n)}</td></tr>`});
+ let h='<div class="card"><div class="chead"><div><h2>Comportamiento mes a mes</h2><div class="hint">'+(st.emp==='Corporativo'?'Corporativo':st.emp)+' · variación contra el mes anterior. Una baja de pendiente o de facturas en aclaración es favorable.</div></div></div><div class="tw"><table><tr><th>Mes</th><th>Facturado</th><th>Pagado</th><th>Avance</th><th>Pendiente</th><th>Δ pendiente</th><th>En aclaración</th></tr>';
+ ms.forEach((o,i)=>{const p=i?ms[i-1].a:null;h+=`<tr><td>${ML[o.m]}</td><td>${money(o.a.fact)}</td><td>${money(o.a['Pagada'].imp)}</td><td>${pct(o.a['Pagada'].imp/o.a.fact)}</td><td>${money(o.a['Pendiente de pago'].imp)}</td><td>${dl(o.a['Pendiente de pago'].imp,p?p['Pendiente de pago'].imp:undefined,true)}</td><td>${num(o.a['En aclaración'].n)}</td></tr>`});
  h+='</table></div></div>'+notaHTML('mes_a_mes')+'';
  return h;
 }
@@ -323,9 +323,9 @@ function vAcc(){
 function vNt(){return `<div class="card"><div class="chead"><div><h2>Cómo leer las cifras</h2></div></div><div class="notes">
 ${notaHTML('cortes')}
 <div class="note in"><b>Plazo de pago.</b> Cada cliente tiene su plazo. Walmart usa el calendario oficial de facturación (fecha tentativa de pago por periodo); los demás, fecha de factura más los días de crédito del cliente (Chedraui 20, La Comer 60, Coppel 45, Benavides 60, Yza 45, Elektra y Hoteles VG 30 por supuesto). Se ajusta en Empresas, en el detalle, sección Plazo de pago por cliente. Clientes sin plazo definido quedan como Sin fecha de pago.</div>
-<div class="note in"><b>Estatus.</b> Pagada: el folio está confirmado en la fuente de pago. Pendiente: sin pago en la fuente. Por revisar: requiere validar el estatus y nunca se cuenta como pendiente. Las canceladas solo se señalan.</div>
+<div class="note in"><b>Estatus.</b> Pagada: el folio está confirmado en la fuente de pago. Pendiente: sin pago en la fuente. En aclaración: la factura tiene una diferencia, una sustitución o un error de captura por resolver; no se cuenta como pagada ni como pendiente. Intercompañía: facturas a empresas del grupo; se muestran aparte y no suman en facturado, pagado ni pendiente (se eliminan al consolidar). No es factura: notas de crédito y complementos de pago, solo informativos. Las canceladas solo se señalan.</div>
 <div class="note in"><b>Importes.</b> Siempre el subtotal de las facturas. Las notas de crédito, complementos de pago y cartas porte de SEZA cuentan como registros, no como facturas ni como importe.</div>
-<div class="note in"><b>Avance de pago.</b> Importe pagado dividido entre el importe facturado del mismo filtro; las facturas por revisar y canceladas también están en el denominador.</div></div></div>`}
+<div class="note in"><b>Avance de pago.</b> Importe pagado dividido entre el importe facturado del mismo filtro; las facturas en aclaración y canceladas también están en el denominador; intercompañía no.</div></div></div>`}
 
 const dSel=r=>(st.emp==='Corporativo'||r[0]===st.emp)&&(r[2]===OUT?allM():st.meses.has(r[2]));
 /* ===== Plazos de pago por cliente (editables) ===== */
@@ -340,7 +340,7 @@ function enr(r){
  const x=tentOf(r),pg=r[11]||'';let a=null,sem;
  if(r[3]==='Pendiente de pago'){sem=semPend(x.t,r[0]);a=sem.a}
  else if(r[3]==='Pagada'){if(x.t&&pg){a=Math.round((tms(pg)-tms(x.t))/DAY);sem=a>st.sem.gracia?{k:'er',l:'Pagada con atraso',a,r:5}:{k:'ok',l:'Pagada en plazo',a:Math.max(a,0),r:5};a=Math.max(a,0)}else sem={k:'na',l:'No aplica',a:null,r:6}}
- else if(r[3]==='Por revisar')sem={k:'na',l:'Por validar',a:null,r:4};else sem={k:'na',l:'No aplica',a:null,r:6};
+ else if(r[3]==='En aclaración')sem={k:'na',l:'En aclaración',a:null,r:4};else sem={k:'na',l:'No aplica',a:null,r:6};
  return {r,t:x.t,ref:x.ref,src:x.src,pg,a,sem}
 }
 function plazoTxt(r){const p=PLZ[r[0]+'|'+r[6]]||{};const x=tentOf(r);return x.src==='cal'?'Calendario Walmart':x.src==='dias'?p.d+' días':'Sin plazo'}
@@ -375,11 +375,11 @@ function exportFac(L){
  const rows=L.map(e=>{const r=e.r;return [r[0],ML[r[2]]||r[2],r[4],r[5],r[6],r[3],r[9],r[9]==='Sí'?r[7]:0,plazoTxt(r),e.t?fdate(e.t):'',r[11]?fdate(r[11]):'',e.a==null?'':e.a,e.sem.l,r[8]]});
  saveCsv('Detalle_facturas_'+today()+'.csv',csvText(rows,head))
 }
-function cliAgg(L){const m={};L.forEach(e=>{const r=e.r,k=r[0]+'|'+r[6];const o=m[k]=m[k]||{e:r[0],c:r[6],n:0,nf:0,imp:0,pag:0,pen:0,rev:0,cs:0,cn:0,at:0,mx:0,up:''};o.n++;if(r[9]==='Sí'){o.nf++;o.imp+=r[7]}if(r[3]==='Pagada'){o.pag+=r[7];if(r[11]&&r[11]>o.up)o.up=r[11]}else if(r[3]==='Pendiente de pago'){o.pen+=r[9]==='Sí'?r[7]:0;if(e.sem.k==='er'){o.at+=r[7];o.mx=Math.max(o.mx,e.a||0)}}else if(r[3]==='Por revisar')o.rev++;else if(r[3]==='Cancelada con sustitución')o.cs++;else o.cn++});return Object.values(m)}
-const COLS_CLI=[['Cliente','c'],['Empresa','e'],['Plazo','pz'],['Registros','n'],['Facturas','nf'],['Importe (subtotal)','imp'],['Pagado','pag'],['Último pago','up'],['Pendiente','pen'],['Pendiente atrasado','at'],['Máx. días de atraso','mx'],['Por revisar (reg.)','rev'],['Canceladas (reg.)','cx']];
+function cliAgg(L){const m={};L.forEach(e=>{const r=e.r,k=r[0]+'|'+r[6];const o=m[k]=m[k]||{e:r[0],c:r[6],n:0,nf:0,imp:0,pag:0,pen:0,rev:0,cs:0,cn:0,at:0,mx:0,up:''};o.n++;if(r[9]==='Sí'&&!XST.includes(r[3])){o.nf++;o.imp+=r[7]}if(r[3]==='Pagada'){o.pag+=r[7];if(r[11]&&r[11]>o.up)o.up=r[11]}else if(r[3]==='Pendiente de pago'){o.pen+=r[9]==='Sí'?r[7]:0;if(e.sem.k==='er'){o.at+=r[7];o.mx=Math.max(o.mx,e.a||0)}}else if(r[3]==='En aclaración')o.rev++;else if(r[3]==='Cancelada con sustitución')o.cs++;else if(r[3]==='Cancelada sin sustitución')o.cn++});return Object.values(m)}
+const COLS_CLI=[['Cliente','c'],['Empresa','e'],['Plazo','pz'],['Registros','n'],['Facturas','nf'],['Importe (subtotal)','imp'],['Pagado','pag'],['Último pago','up'],['Pendiente','pen'],['Pendiente atrasado','at'],['Máx. días de atraso','mx'],['En aclaración (reg.)','rev'],['Canceladas (reg.)','cx']];
 function cliSorted(L){const a=cliAgg(L);a.forEach(o=>{o.cx=o.cs+o.cn;const p=PLZ[o.e+'|'+o.c]||{};o.pz=p.cal?'Calendario Walmart':(p.d!=null&&p.d!==''?p.d+' días':'Sin plazo')});const k=st.csort.k,d=st.csort.dir;return a.sort((x,y)=>{const u=x[k],v=y[k];const c=typeof u==='number'&&typeof v==='number'?u-v:String(u).localeCompare(String(v),'es',{numeric:true});return c*d})}
 function exportCli(L){
- const head=['Empresa','Cliente','Plazo aplicado','Registros','Facturas','Importe subtotal','Pagado','Último pago','Pendiente','Pendiente atrasado','Máx. días de atraso','Por revisar (registros)','Canceladas con sustitución','Canceladas sin sustitución'];
+ const head=['Empresa','Cliente','Plazo aplicado','Registros','Facturas','Importe subtotal','Pagado','Último pago','Pendiente','Pendiente atrasado','Máx. días de atraso','En aclaración (registros)','Canceladas con sustitución','Canceladas sin sustitución'];
  saveCsv('Detalle_por_cliente_'+today()+'.csv',csvText(cliSorted(L).map(o=>[o.e,o.c,o.pz,o.n,o.nf,o.imp,o.pag,o.up,o.pen,o.at,o.mx,o.rev,o.cs,o.cn]),head))
 }
 function plazoPanel(){
@@ -393,7 +393,7 @@ function plazoPanel(){
 function drillCard(){
  const emp=st.emp==='Corporativo'?'Corporativo':st.emp;
  return `<div class="card" id="drill"><div class="chead"><div><h2>Detalle de facturas${st.cliF?' · '+st.cliF.split('|')[1]:''}</h2><div class="hint">${st.cliF?st.cliF.split('|')[0]+' · cliente seleccionado · <button class="tbtn" type="button" id="dcliclr">Quitar cliente</button>':emp} · meses seleccionados · elige uno o varios estatus</div></div><button class="tbtn" type="button" id="dclose">Cerrar</button></div>
- <div class="dtools" id="dstat" role="group" aria-label="Estatus a mostrar">${ST.map(k=>`<button type="button" class="chip" data-st="${k}" aria-pressed="${st.stat.has(k)}">${k}</button>`).join('')}<button class="ghost" type="button" id="dallst">Todos los estatus</button></div>
+ <div class="dtools" id="dstat" role="group" aria-label="Estatus a mostrar">${ALL.map(k=>`<button type="button" class="chip" data-st="${k}" aria-pressed="${st.stat.has(k)}">${k}</button>`).join('')}<button class="ghost" type="button" id="dallst">Todos los estatus</button></div>
  ${st.stat.has('Pendiente de pago')?semParams():''}
  <div id="dbody">${drillBody()}</div>${plazoPanel()}</div>`
 }
@@ -422,7 +422,7 @@ function wireDrill(){
  const b=$('dbody');if(!b)return;
  const re=()=>{b.innerHTML=drillBody();wireDrill()};
  document.querySelectorAll('[data-st]').forEach(x=>x.onclick=()=>{const k=x.dataset.st;if(st.stat.has(k))st.stat.delete(k);else st.stat.add(k);st.page=0;st.sf='';render()});
- const al=$('dallst');if(al)al.onclick=()=>{st.stat=new Set(ST);st.page=0;render()};
+ const al=$('dallst');if(al)al.onclick=()=>{st.stat=new Set(ALL);st.page=0;render()};
  const c=$('dcat');if(c)c.onchange=()=>{st.cat=c.value;st.page=0;re()};
  const v=$('dview');if(v)v.onchange=()=>{st.view=v.value;st.page=0;re()};
  const sf=$('dsf');if(sf)sf.onchange=()=>{st.sf=sf.value;st.page=0;re()};
@@ -444,7 +444,7 @@ function wireDrill(){
   pd.querySelectorAll('[data-pd]').forEach(x=>x.onchange=()=>{const v=x.value.trim();PLZ[x.dataset.pd].d=v===''?null:Math.max(0,Math.min(365,+v||0));savePlz();st.plzOpen=true;render()});
   const rs=$('plzRst');if(rs)rs.onclick=()=>{Object.keys(PLZ0).forEach(k=>PLZ[k]={...PLZ0[k]});savePlz();st.plzOpen=true;render()}}
 }
-function cliExport(){const {corp,L}=cliList();const head=['Empresa','Cliente','Facturado','Pagado','Avance','Pendiente','Por revisar (registros)','Canceladas con sustitución','Canceladas sin sustitución'];
+function cliExport(){const {corp,L}=cliList();const head=['Empresa','Cliente','Facturado','Pagado','Avance','Pendiente','En aclaración (registros)','Canceladas con sustitución','Canceladas sin sustitución'];
  const out=cliSortedL(L).map(o=>[o.e,o.c,o.fact,o.pag,o.av.toFixed(4),o.pen,o.rev,o.a['Cancelada con sustitución'].n,o.a['Cancelada sin sustitución'].n]);
  saveCsv('Resumen_clientes_'+st.cliEmp+'_'+today()+'.csv',csvText(out,head))}
 
@@ -463,7 +463,7 @@ function semPend(tent,e){
 }
 function semRow(r){
  if(r[3]==='Pendiente de pago')return semPend(r[10],r[0]);
- if(r[3]==='Por revisar')return {k:'na',l:'Por validar',a:null,r:4};
+ if(r[3]==='En aclaración')return {k:'na',l:'En aclaración',a:null,r:4};
  return {k:'na',l:'No aplica',a:null,r:5};
 }
 const semBadge=x=>x.k==='na'?`<span class="badge">${x.l}</span>`:`<span class="badge ${x.k}"><i class="sd"></i>${x.l}</span>`;
@@ -494,7 +494,7 @@ function calData(){
  const K={er:{n:0,i:0},wr:{n:0,i:0},ok:{n:0,i:0},in:{n:0,i:0}};
  D.calag.filter(a=>E.includes(a[1])).forEach(a=>{
   const o=by[a[0]]||un,s=a[2];o.fact+=a[5];o.nf+=a[4];
-  if(s==='Pagada')o.pag+=a[5];else if(s==='Por revisar')o.rev+=a[3];
+  if(s==='Pagada')o.pag+=a[5];else if(s==='En aclaración')o.rev+=a[3];
   else if(s==='Pendiente de pago'){o.pen+=a[5];o.penN+=a[4];const x=a[0]==='Sin asignación'?semPend(null,a[1]):semPend(CALX[a[0]][8],a[1]);K[x.k].n+=a[4];K[x.k].i+=a[5];
    if(o!==un){if(!o.sem||x.r<o.sem.r)o.sem=x;o.late=Math.max(o.late,x.a||0)}}
  });
@@ -545,12 +545,12 @@ function render(scroll){
  cid=0;const v=$('view');v.innerHTML=V[st.tab]();wireCards(v);bindTips(v);
  v.querySelectorAll('tr[data-s]').forEach(r=>{const go=()=>{const k=r.dataset.s;st.cliF='';if(st.drill&&st.stat.size===1&&st.stat.has(k))st.drill=null;else{st.drill='det';st.stat=new Set([k])}st.q='';st.cat='';st.sf='';st.page=0;st.sort=k==='Pendiente de pago'?{k:91,dir:1}:{k:7,dir:-1};render();if(st.drill)$('drill').scrollIntoView({block:'start'})};r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
  wireDrill();wireSem();
- const oa=$('dopenall');if(oa)oa.onclick=()=>{st.cliF='';st.drill='det';st.stat=new Set(ST);st.q='';st.cat='';st.sf='';st.page=0;st.sort={k:7,dir:-1};render();$('drill').scrollIntoView({block:'start'})};
+ const oa=$('dopenall');if(oa)oa.onclick=()=>{st.cliF='';st.drill='det';st.stat=new Set(ALL);st.q='';st.cat='';st.sf='';st.page=0;st.sort={k:7,dir:-1};render();$('drill').scrollIntoView({block:'start'})};
  const ce=$('cliexp');if(ce)ce.onclick=cliExport;
  const cs=$('cliSel');if(cs)cs.onchange=()=>{const k=cs.value;st.clisort={k,dir:(k==='c'||k==='e')?1:-1};render()};
  const cdr=$('cliDir');if(cdr)cdr.onclick=()=>{st.clisort.dir*=-1;render()};
  v.querySelectorAll('th[data-cs]').forEach(th=>{const go=()=>{const k=th.dataset.cs;st.clisort=st.clisort.k===k?{k,dir:-st.clisort.dir}:{k,dir:(k==='c'||k==='e')?1:-1};render()};th.onclick=go;th.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
- v.querySelectorAll('tr[data-ckey]').forEach(r=>{const go=()=>{st.cliF=r.dataset.ckey;st.drill='det';st.stat=new Set(ST);st.q='';st.cat='';st.sf='';st.page=0;st.sort={k:3,dir:1};render();$('drill').scrollIntoView({block:'start'})};r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
+ v.querySelectorAll('tr[data-ckey]').forEach(r=>{const go=()=>{st.cliF=r.dataset.ckey;st.drill='det';st.stat=new Set(ALL);st.q='';st.cat='';st.sf='';st.page=0;st.sort={k:3,dir:1};render();$('drill').scrollIntoView({block:'start'})};r.onclick=go;r.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}}});
  if(st.tab==='cal'){const c=v.querySelector('.tw.tall'),r=c&&c.querySelector('tr.cur');if(c&&r)c.scrollTop=Math.max(0,r.getBoundingClientRect().top-c.getBoundingClientRect().top+c.scrollTop-80)}
  v.querySelectorAll('[data-ce]').forEach(b=>b.onclick=()=>{st.cliEmp=b.dataset.ce;render()});
  v.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{st.emp=b.dataset.e;render()});

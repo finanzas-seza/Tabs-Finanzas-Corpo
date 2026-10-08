@@ -1,13 +1,23 @@
 {
   "_nota": "Parámetros del tablero. Se editan a mano; las facturas vienen de data/fuentes/*.csv",
-  "titulo_actualizacion": "Cortes de pago: SHIP al 7 de octubre de 2026 · SEZA y GSG al 29 de septiembre de 2026",
+  "titulo_actualizacion": "Facturas emitidas desde el 1 de julio · Pagos Walmart al 8 de octubre · otros clientes de SEZA al 29 de septiembre",
   "anio": 2026,
-  "meses": ["JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE"],
+  "meses": ["JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE"],
   "empresas": ["SEZA", "SHIP", "GSG"],
   "segmentos": {
     "SEZA": {"Nueva Wal Mart de México": "SEZA · Walmart", "*": "SEZA · Otros clientes"}
   },
-  "cortes": {"SEZA": "2026-09-29", "SHIP": "2026-10-07", "GSG": "2026-09-29"},
+  "retail": {
+    "_nota": "Carpeta de Tesorería con los Retail de Walmart por empresa; la lee scripts/actualizar_retail.py",
+    "carpeta": "J:/Mi unidad/SEZA/00_Gestión de proyectos/03_Tesoreria/Comprobaciones",
+    "subcarpetas": {"SEZA": "SEZA/RETAIL WALMART", "SHIP": "SHIP/RETAIL", "GSG": "GSG/Retail"},
+    "clientes": {
+      "SEZA": ["Nueva Wal Mart de México"],
+      "SHIP": ["Walmart", "Sam's"],
+      "GSG": ["Walmart"]
+    }
+  },
+  "cortes": {"SEZA": "2026-10-08", "SHIP": "2026-10-08", "GSG": "2026-10-08"},
   "diasProximo": 7,
   "gracia": 0,
   "congelamientos": [
@@ -94,49 +104,49 @@
   },
   "acciones": [
     {
+      "que": "Pago no localizado en Retail (Registro dice pagada)",
+      "accion": "Confirmar el pago con Walmart o corregir el Registro",
+      "validacion": ["Pago no localizado en Retail (Registro dice pagada)"]
+    },
+    {
+      "que": "Diferencia de importe, deducción o pago parcial",
+      "accion": "Identificar la deducción y pedir la aclaración al cliente",
+      "validacion": ["Diferencia de importe (deducción o pago parcial)", "Pago parcial o en varios movimientos"]
+    },
+    {
+      "que": "Sustitución pendiente de validar",
+      "accion": "Validar el folio sustituto",
+      "validacion": ["Sustitución pendiente de validar"]
+    },
+    {
+      "que": "Error de captura (Registro vs plataforma)",
+      "accion": "Corregir la captura en Control Registro o en el Registro",
+      "validacion": ["Error de captura (Registro vs plataforma)"]
+    },
+    {
+      "que": "Factura sin folio en Registro",
+      "accion": "Capturar el folio en el Registro de SHIP",
+      "validacion": ["Factura sin folio en Registro"]
+    },
+    {
       "que": "Registro dice Vigente, la cobranza ya muestra pagada",
-      "accion": "Actualizar el Registro con la fecha de pago",
+      "accion": "Capturar la fecha de pago en el Registro",
       "validacion": ["Vigente en Registro, pagada en cobranza"]
     },
     {
-      "que": "Registro dice Pagado, sin pago visible en Retail",
-      "accion": "Confirmar el pago o corregir el estatus",
-      "validacion": ["Pagado en Registro sin pago en Retail"]
+      "que": "Pagada según Registro, sin estado de cuenta",
+      "accion": "Informativo: confirmar con el estado de cuenta cuando esté disponible",
+      "validacion": ["Pagada según Registro (sin estado de cuenta)"]
     },
     {
-      "que": "Documentos que no son factura (notas de crédito, complementos, cartas porte)",
-      "accion": "Informativo, validar aplicación",
-      "validacion_empieza": ["Documento no es factura por cobrar"]
+      "que": "Facturas intercompañía",
+      "accion": "Conciliar con la empresa del grupo; se eliminan al consolidar",
+      "estatus": ["Intercompañía"]
     },
     {
-      "que": "Sustituto no vigente, sin importe o no localizado",
-      "accion": "Validar el folio sustituto",
-      "validacion": ["Sustituto no es factura vigente", "Sustituto no localizado en la cartera"]
-    },
-    {
-      "que": "Diferencia de subtotal o fecha de factura mal capturada",
-      "accion": "Corregir captura en Registro",
-      "validacion": ["Diferencia de importe", "Fecha de factura fuera del periodo"]
-    },
-    {
-      "que": "Capturada en Control Registro pero no activa en plataforma",
-      "accion": "Validar si es cancelación, carta porte o factura faltante",
-      "validacion": ["Capturada en Control Registro, no activa en plataforma"]
-    },
-    {
-      "que": "Cancelación por validar (Control Registro vs plataforma)",
-      "accion": "Validar el estatus de la factura",
-      "validacion": ["Cancelación por validar (Control Registro vs plataforma)"]
-    },
-    {
-      "que": "Cancelada en Control Registro pero pagada por Walmart",
-      "accion": "Validar con Walmart y Control Registro",
-      "validacion": ["Cancelada en Control Registro pero pagada por Walmart"]
-    },
-    {
-      "que": "Clientes sin fuente de pago (Soriana, Coppel, Artis, intercompañía y otros)",
-      "accion": "Conseguir su archivo de pagos para validar",
-      "validacion": ["Sin fuente de pago para validar"]
+      "que": "Documentos que no son factura (notas de crédito, complementos)",
+      "accion": "Informativo, validar su aplicación",
+      "estatus": ["No es factura por cobrar"]
     },
     {
       "que": "Canceladas sin sustitución",
@@ -148,31 +158,31 @@
     {
       "tipo": "wr",
       "empresas": ["SHIP"],
-      "titulo": "SHIP: hay facturas que Registro marca pagadas y Retail no muestra.",
-      "texto": "Se dejan por revisar, no como pendientes. Acción: confirmar el pago con Retail o corregir el estatus en Registro."
-    },
-    {
-      "tipo": "er",
-      "empresas": ["SHIP", "SEZA"],
-      "titulo": "Hay clientes sin archivo de pagos: Soriana, Coppel, Artis, Super Papelera, intercompañía y otros.",
-      "texto": "Sus facturas están en el tablero y quedan por revisar, no como pagadas ni pendientes. Acción: conseguir su archivo de pagos."
-    },
-    {
-      "tipo": "in",
-      "empresas": ["GSG"],
-      "titulo": "GSG: pagos validados con Retail al 29/09; facturas cargadas hasta el 06/10.",
-      "texto": "Las facturas emitidas del 29/09 al 06/10 aparecen pendientes porque el Retail de GSG en la cartera no trae pagos posteriores al 29/09. Hay 3 facturas que Registro aún marca Vigente y ya están pagadas: capturar su fecha de pago en Registro."
+      "titulo": "SHIP: Soriana y Coppel se toman como pagadas según el Registro.",
+      "texto": "No hay estado de cuenta de SHIP para confirmarlo; la fecha de pago es la del Registro. Las facturas de Walmart que el Registro marca pagadas y el Retail no muestra quedan en aclaración."
     },
     {
       "tipo": "in",
       "empresas": ["SEZA"],
-      "titulo": "SEZA: corte al 29/09, sin facturas de octubre.",
-      "texto": "Octubre de SEZA se verá en cero hasta correr la ingesta con el reporte mensual de octubre, Control Registro, Retail, bancos y Cob de Tesorería."
+      "titulo": "SEZA: las facturas a Logística SHIP son intercompañía.",
+      "texto": "Se muestran aparte y no suman en facturado, pagado ni pendiente; se eliminan al consolidar."
+    },
+    {
+      "tipo": "in",
+      "empresas": ["GSG"],
+      "titulo": "GSG: pagos validados con Retail al 08/10; facturas cargadas hasta el 06/10.",
+      "texto": "Las facturas pendientes de octubre están dentro de plazo. Hay 3 facturas que Registro aún marca Vigente y ya están pagadas: capturar su fecha de pago en Registro."
+    },
+    {
+      "tipo": "in",
+      "empresas": ["SEZA"],
+      "titulo": "SEZA: pagos de Walmart al 08/10; otros clientes al 29/09; sin facturas de octubre.",
+      "texto": "Los pagos de Walmart vienen del Retail al 08/10. Los de otros clientes (Cob Tesorería y bancos) siguen al 29/09, igual que la facturación: octubre de SEZA se verá en cero hasta cargar el reporte mensual de octubre."
     }
   ],
   "notas": {
-    "pie": "Finanzas · Grupo SEZA · Importes en subtotal; cada empresa se corta con su fuente de pago (SHIP al 07/10 con Retail; SEZA jul–sep con la Cartera de Cobranza al 29/09 (Retail, Cob Tesorería y bancos) y junio con Retail al 22/09; GSG con Retail al 29/09).",
-    "mes_a_mes": ["Septiembre y octubre se leen distinto.", "Sus facturas siguen dentro de plazo de pago y los cortes no son iguales: SHIP al 07/10, SEZA y GSG al 29/09. SEZA todavía no tiene facturas de octubre. El avance sube conforme llegan los pagos."],
-    "cortes": ["Cortes distintos.", "SHIP llega al 07/10 (Registro y Retail de la cartera SHIP). SEZA julio a septiembre sale de la Cartera de Cobranza SEZA (Retail al 29/09; otros clientes con Cob Tesorería y depósitos identificados en Banamex y Santander); junio de SEZA sigue con el cruce anterior (Retail al 22/09). GSG trae facturas hasta el 06/10 y pagos al 29/09. Por eso los pendientes recientes no se comparan directo entre empresas."]
+    "pie": "Finanzas · Grupo SEZA · Facturas emitidas desde el 01/07/2026. Importes en subtotal. Pagos: Retail Walmart al 08/10 (SEZA, SHIP y GSG); otros clientes de SEZA con Cob Tesorería y bancos al 29/09; Soriana y Coppel de SHIP según Registro.",
+    "mes_a_mes": ["Septiembre y octubre se leen distinto.", "Sus facturas siguen dentro de plazo de pago. Los pagos de Walmart llegan al 08/10 y los de otros clientes de SEZA al 29/09. SEZA todavía no tiene facturas de octubre. El avance sube conforme llegan los pagos."],
+    "cortes": ["Cortes y alcance.", "Se consideran las facturas emitidas desde el 1 de julio de 2026. Pagos de Walmart: Retail de cada empresa (Tesorería › Comprobaciones) al 08/10. Otros clientes de SEZA: Cob Tesorería y depósitos identificados en Banamex y Santander al 29/09. Soriana y Coppel de SHIP: fecha de pago del Registro, sin estado de cuenta. Facturas: SEZA al 30/09, SHIP y GSG al 06/10."]
   }
 }
