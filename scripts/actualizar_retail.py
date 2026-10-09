@@ -4,7 +4,7 @@ Actualiza los pagos de Walmart con los Retail que Tesorería deja en
   <carpeta_retail>/<EMPRESA>/<subcarpeta Retail>/   (ver "retail" en data/config.json)
 
 Toma el CSV más reciente de cada empresa en data/fuentes/, busca en el Retail las facturas
-de Walmart que siguen "Pendiente de pago" o "Pago no localizado en Retail" (en aclaración) y, si
+de Walmart que siguen "Pendiente de pago" o "Pago no localizado en Retail" (pendiente de validación) y, si
 encuentra el pago, las marca Pagada con la fecha del Retail. Escribe un CSV nuevo
 AAAAMMDD_cobranza_<EMP>.csv (fecha de hoy) y deja el anterior intacto.
 
@@ -108,7 +108,7 @@ def main():
         clientes = set(rcfg["clientes"][emp])
         n, imp = 0, 0.0
         for i, x in d.iterrows():
-            if x["cliente"] not in clientes or x["estatus"] not in ("Pendiente de pago", "En aclaración", "Por revisar") or x["validacion"] not in REVISAR:
+            if x["cliente"] not in clientes or x["estatus"] not in ("Pendiente de pago", "Pendiente de validación", "En aclaración", "Por revisar") or x["validacion"] not in REVISAR:
                 continue
             m = cruza(x["folio"], float(x["subtotal"] or 0), P)
             if m is None:

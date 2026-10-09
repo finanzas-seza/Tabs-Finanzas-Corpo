@@ -22,14 +22,14 @@ CONFIG = RAIZ / "data" / "config.json"
 SALIDA = RAIZ / "data" / "cobranza.js"
 
 FUERA = "FUERA DE PERIODO"
-ESTATUS = ["Pagada", "Pendiente de pago", "En aclaración",
+ESTATUS = ["Pagada", "Pendiente de pago", "Pendiente de validación",
            "Cancelada con sustitución", "Cancelada sin sustitución",
            "Intercompañía", "No es factura por cobrar"]
 # Se muestran aparte y no suman en facturado, pagado ni pendiente
 FUERA_DE_CARTERA = {"Intercompañía", "No es factura por cobrar"}
 # Equivalencias con el estatus de la cartera (skill de ingesta)
 EQUIV = {"Pagado": "Pagada", "Vigente": "Pendiente de pago", "Pendiente": "Pendiente de pago",
-         "Por revisar": "En aclaración"}
+         "Por revisar": "Pendiente de validación", "En aclaración": "Pendiente de validación"}
 MESES_ES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO",
             "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
 OBLIGATORIAS = ["empresa", "folio", "fecha_emision", "cliente", "subtotal", "estatus"]
@@ -153,10 +153,34 @@ def acciones(det, cfg, empresas):
         cuenta = [sum(1 for r in det if r[0] == e and ok(r)) for e in empresas]
         usadas |= {r[8] for r in det if ok(r)}
         out.append([a["que"], a["accion"], cuenta])
-    sin = Counter(r[8] for r in det if r[3] == "En aclaración" and r[8] not in usadas)
+    sin = Counter(r[8] for r in det if r[3] == "Pendiente de validación" and r[8] not in usadas)
     for v, n in sin.items():
         avisos.append(f"Validación sin acción asignada en config.json: '{v}' ({n} registros)")
     return out
+
+
+def lote_siguiente(det, cal):
+    """Walmart paga por lotes. Si la factura se emitió después de la carga de su periodo
+    (martes posterior a la prefactura), no alcanza ese lote: su pago tentativo es el del
+    primer lote cuya carga sea igual o posterior a la emisión. Agrega al renglón:
+    r[14] = 1 si se recorrió, r[15] = pago tentativo original del periodo."""
+    per = {c[0]: c for c in cal}
+    cargas = sorted((c[7], c[8]) for c in cal)          # (carga, pago)
+    n = 0
+    for r in det:
+        r += [0, ""]
+        if not (r[12] in per and r[10] and r[5]):
+            continue
+        fe = "-".join(r[5].split("/")[::-1])
+        if fe <= per[r[12]][7]:
+            continue
+        sig = [p for c, p in cargas if c >= fe]
+        if sig:
+            nuevo = max(r[10], min(sig))
+            if nuevo != r[10]:
+                r[15], r[10], r[14] = r[10], nuevo, 1
+                n += 1
+    return n
 
 
 def main():
@@ -175,6 +199,7 @@ def main():
 
     cal = cfg["calendario_walmart"]["periodos"]
     ids_cal = {c[0] for c in cal}
+    n_lote = lote_siguiente(det, cal)
     sin_cal = Counter(r[12] for r in det if r[12] and r[12] not in ids_cal)
     if sin_cal:
         avisos.append(f"Periodos Walmart que no están en el calendario de config.json: {dict(sin_cal)}")
@@ -210,6 +235,7 @@ def main():
         imp = sum(r[7] for r in de if r[9] == "Sí")
         print(f"  {e:5} {archivos.get(e, '—'):32} {len(de):6,} reg.  ${imp:,.2f}  " +
               " · ".join(f"{k}: {c[k]}" for k in ESTATUS if c[k]))
+    print(f"Facturas recorridas al lote siguiente (emitidas después de la carga): {n_lote:,}")
     for a in avisos:
         print("AVISO:", a)
     for x in errores[:50]:

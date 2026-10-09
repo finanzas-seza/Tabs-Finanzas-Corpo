@@ -119,9 +119,9 @@
       "validacion": ["Sustitución pendiente de validar"]
     },
     {
-      "que": "Error de captura (Registro vs plataforma)",
-      "accion": "Corregir la captura en Control Registro o en el Registro",
-      "validacion": ["Error de captura (Registro vs plataforma)"]
+      "que": "Diferencia entre Registro y plataforma",
+      "accion": "Validar la captura en Control Registro o en el Registro",
+      "validacion": ["Diferencia entre Registro y plataforma"]
     },
     {
       "que": "Factura sin folio en Registro",
@@ -159,7 +159,7 @@
       "tipo": "wr",
       "empresas": ["SHIP"],
       "titulo": "SHIP: Soriana y Coppel se toman como pagadas según el Registro.",
-      "texto": "No hay estado de cuenta de SHIP para confirmarlo; la fecha de pago es la del Registro. Las facturas de Walmart que el Registro marca pagadas y el Retail no muestra quedan en aclaración."
+      "texto": "No hay estado de cuenta de SHIP para confirmarlo; la fecha de pago es la del Registro. Las facturas de Walmart que el Registro marca pagadas y el Retail no muestra quedan pendientes de validación."
     },
     {
       "tipo": "in",
