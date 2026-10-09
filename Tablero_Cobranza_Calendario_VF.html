@@ -312,11 +312,11 @@ function vMM(){
 }
 function agingCards(){
  const E=D.det.filter(r=>dSel(r)).map(enr),P=E.filter(e=>e.r[3]==='Pendiente de pago');
- const B=[['Por vencer',e=>e.dd!=null&&e.dd<=0],['1–15 días',e=>e.dd>=1&&e.dd<=15],['16–30 días',e=>e.dd>=16&&e.dd<=30],['31–60 días',e=>e.dd>=31&&e.dd<=60],['61–90 días',e=>e.dd>=61&&e.dd<=90],['Más de 90 días',e=>e.dd>90],['Sin vencimiento',e=>e.dd==null]];
+ const B=[['Dentro del plazo',e=>e.dd!=null&&e.dd<=0],['1–15 días',e=>e.dd>=1&&e.dd<=15],['16–30 días',e=>e.dd>=16&&e.dd<=30],['31–60 días',e=>e.dd>=31&&e.dd<=60],['61–90 días',e=>e.dd>=61&&e.dd<=90],['Más de 90 días',e=>e.dd>90],['Sin fecha de pago',e=>e.dd==null]];
  const imp=e=>e.r[9]==='Sí'?e.r[7]:0;
  const R=B.map(([l,f])=>{const x=P.filter(f);return {l,n:x.length,i:x.reduce((s,e)=>s+imp(e),0)}});
  const mx=Math.max(1,...R.slice(1,6).map(o=>o.i)),tot=R.reduce((s,o)=>s+o.i,0);
- let a='<div class="card s6"><div class="chead"><div><h2>Antigüedad de la cartera pendiente</h2><div class="hint">Facturas pendientes por días vencidos al corte de cada fuente · '+money(tot)+'</div></div></div><div class="tw"><table><tr><th>Días vencida</th><th>Facturas</th><th>Importe</th><th style="width:40%"></th></tr>'+R.map((o,k)=>`<tr><td>${k&&k<6?'<span class="badge er">'+o.l+'</span>':o.l}</td><td>${num(o.n)}</td><td>${money(o.i)}</td><td>${k&&k<6?`<div style="height:12px;min-width:80px;background:var(--grid);border-radius:4px;overflow:hidden"><b style="display:block;height:100%;width:${(o.i/mx*100).toFixed(1)}%;background:var(--crit)"></b></div>`:''}</td></tr>`).join('')+'</table></div><div class="hint" style="margin-top:6px">Sin vencimiento: clientes sin plazo definido (por ejemplo Soriana). Las facturas de Walmart sin periodo en el Registro usan los días de crédito de la cartera (SEZA 15, SHIP 20, GSG 30).</div></div>';
+ let a='<div class="card s6"><div class="chead"><div><h2>Antigüedad de la cartera pendiente</h2><div class="hint">Facturas pendientes por días de atraso al corte de cada fuente · '+money(tot)+'</div></div></div><div class="tw"><table><tr><th>Días de atraso</th><th>Facturas</th><th>Importe</th><th style="width:40%"></th></tr>'+R.map((o,k)=>`<tr><td>${k&&k<6?'<span class="badge er">'+o.l+'</span>':o.l}</td><td>${num(o.n)}</td><td>${money(o.i)}</td><td>${k&&k<6?`<div style="height:12px;min-width:80px;background:var(--grid);border-radius:4px;overflow:hidden"><b style="display:block;height:100%;width:${(o.i/mx*100).toFixed(1)}%;background:var(--crit)"></b></div>`:''}</td></tr>`).join('')+'</table></div><div class="hint" style="margin-top:6px">Sin fecha de pago: clientes sin plazo definido (por ejemplo Soriana). Las facturas de Walmart sin periodo en el Registro usan los días de crédito de la cartera (SEZA 15, SHIP 20, GSG 30).</div></div>';
  const W=E.filter(e=>e.r[12]&&(e.r[3]==='Pagada'||e.r[3]==='Pendiente de pago')),T=W.filter(e=>e.r[14]);
  const by=['SEZA','SHIP','GSG'].filter(x=>st.emp==='Corporativo'||x===st.emp).map(x=>{const w=W.filter(e=>e.r[0]===x),t=T.filter(e=>e.r[0]===x);const d=t.reduce((s,e)=>s+Math.round((tms(e.r[10])-tms(e.r[15]))/DAY),0);return {x,n:w.length,t:t.length,i:t.reduce((s,e)=>s+imp(e),0),d:t.length?d/t.length:0}});
  a+='<div class="card s6"><div class="chead"><div><h2>Facturación tardía (Walmart)</h2><div class="hint">Facturas emitidas después de la carga de su periodo: Walmart las paga en el lote siguiente. Es retraso de cobro que depende de nosotros, no de Walmart.</div></div></div><div class="tw"><table><tr><th>Empresa</th><th>Facturas</th><th>Tarde</th><th>%</th><th>Importe</th><th>Días recorridos</th></tr>'+by.map(o=>`<tr><td>${o.x}</td><td>${num(o.n)}</td><td>${num(o.t)}</td><td>${o.n?pct(o.t/o.n):'–'}</td><td>${money(o.i)}</td><td>${o.t?num(o.d)+' días':'–'}</td></tr>`).join('')+'</table></div></div>';
@@ -334,7 +334,7 @@ function vAcc(){
 }
 function vNt(){return `<div class="card"><div class="chead"><div><h2>Cómo leer las cifras</h2></div></div><div class="notes">
 ${notaHTML('cortes')}
-<div class="note in"><b>Plazo de pago.</b> Cada cliente tiene su plazo. Se expresa en días desde la fecha de factura. Walmart paga por lotes semanales según su calendario oficial (periodo de servicio que cierra en miércoles, pago 9 días después del cierre); si la factura se emite después de la carga de su periodo, entra al lote siguiente y se marca como facturada tarde. Por eso el plazo de Walmart varía por factura (típicamente 3 a 16 días). Los demás clientes: fecha de factura más sus días de crédito (Chedraui 20, La Comer 60, Coppel 45, Benavides 60, Yza 45, Elektra y Hoteles VG 30 por supuesto). Se ajusta en Empresas, en el detalle, sección Plazo de pago por cliente. Clientes sin plazo definido quedan sin vencimiento.</div>
+<div class="note in"><b>Plazo de pago.</b> Cada cliente tiene su plazo. Se expresa en días desde la fecha de factura. Walmart paga por lotes semanales según su calendario oficial (periodo de servicio que cierra en miércoles, pago 9 días después del cierre); si la factura se emite después de la carga de su periodo, entra al lote siguiente y se marca como facturada tarde. Por eso el plazo de Walmart varía por factura (típicamente 3 a 16 días). Los demás clientes: fecha de factura más sus días de crédito (Chedraui 20, La Comer 60, Coppel 45, Benavides 60, Yza 45, Elektra y Hoteles VG 30 por supuesto). Se ajusta en Empresas, en el detalle, sección Plazo de pago por cliente. Clientes sin plazo definido quedan como Sin fecha de pago.</div>
 <div class="note in"><b>Estatus.</b> Pagada: el folio está confirmado en la fuente de pago. Pendiente: sin pago en la fuente. Pendiente de validación: falta confirmar un dato (pago, importe, sustitución o captura) antes de clasificarla como pagada o pendiente; no implica un error. Intercompañía: facturas a empresas del grupo; se muestran aparte y no suman en facturado, pagado ni pendiente (se eliminan al consolidar). No es factura: notas de crédito y complementos de pago, solo informativos. Las canceladas solo se señalan.</div>
 <div class="note in"><b>Importes.</b> Siempre el subtotal de las facturas. Las notas de crédito, complementos de pago y cartas porte de SEZA cuentan como registros, no como facturas ni como importe.</div>
 <div class="note in"><b>Avance de pago.</b> Importe pagado dividido entre el importe facturado del mismo filtro; las facturas pendientes de validación y canceladas también están en el denominador; intercompañía no.</div></div></div>`}
@@ -362,7 +362,7 @@ function sitTxt(e){const r=e.r;
  if(r[3]==='Pendiente de pago'){if(e.dd==null)return '';return e.dd>0?'hace '+pl(e.dd,'día'):e.dd===0?'vence hoy':'vence en '+pl(-e.dd,'día')}
  if(r[3]==='Pagada'&&e.t&&e.pg){const at=Math.round((tms(e.pg)-tms(e.t))/DAY),pd=plazoDias(r,e.pg);return at>st.sem.gracia?pl(at,'día')+' después':(pd==null?'':'pagó en '+pl(pd,'día'))}
  return ''}
-const SORTS=[['Folio',4],['Fecha de factura',5],['Cliente',6],['Empresa',0],['Mes',2],['Importe (subtotal)',7],['Vence',10],['Fecha de pago',11],['Días de atraso',90],['Estatus',3],['Situación',91],['Categoría',8]];
+const SORTS=[['Folio',4],['Fecha de factura',5],['Cliente',6],['Empresa',0],['Mes',2],['Importe (subtotal)',7],['Vence',10],['Fecha de pago',11],['Días de atraso',90],['Estatus',3],['Semáforo',91],['Categoría',8]];
 function sortKey(e,K){const r=e.r;switch(K){case 90:return e.a==null?-1:e.a;case 91:return e.sem.r*1e9-(r[9]==='Sí'?r[7]:0);case 10:return e.t;case 11:return e.pg;case 5:return r[5]?r[5].split('/').reverse().join(''):'';case 2:return MES.indexOf(r[2]);case 7:return r[9]==='Sí'?r[7]:0;default:return r[K]}}
 const NUMK=new Set([7,90,2]);
 const dSelC=r=>st.cliF?(r[2]===OUT?allM():st.meses.has(r[2])):dSel(r);
@@ -377,7 +377,7 @@ function filtDrill(){
  L.sort((a,b)=>{const x=sortKey(a,K),y=sortKey(b,K);const c=typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y),'es',{numeric:true});return (c||String(a.r[4]).localeCompare(String(b.r[4]),'es',{numeric:true}))*dr});
  return {all,cats,Lb,L};
 }
-const COLS_FAC=[['Folio',4],['Fecha',5],['Cliente',6],['Empresa',0],['Mes',2],['Importe (subtotal)',7],['Plazo',-1],['Vence',10],['Fecha de pago',11],['Días de atraso',90],['Estatus',3],['Situación',91],['Categoría',8]];
+const COLS_FAC=[['Folio',4],['Fecha',5],['Cliente',6],['Empresa',0],['Mes',2],['Importe (subtotal)',7],['Plazo',-1],['Vence',10],['Fecha de pago',11],['Días de atraso',90],['Estatus',3],['Semáforo',91],['Categoría',8]];
 /* ----- CSV ----- */
 function csvText(rows,head){const q=v=>{v=v==null?'':String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};return '﻿'+[head].concat(rows).map(r=>r.map(q).join(',')).join('\r\n')}
 async function saveCsv(name,text){
@@ -389,7 +389,7 @@ async function saveCsv(name,text){
 }
 const today=()=>new Date().toISOString().slice(0,10);
 function exportFac(L){
- const head=['Empresa','Mes','Folio','Fecha de factura','Cliente','Estatus','Es factura','Importe subtotal','Plazo','Vence','Facturada tarde (lote siguiente)','Fecha de pago','Días de atraso','Situación','Detalle de situación','Motivo'];
+ const head=['Empresa','Mes','Folio','Fecha de factura','Cliente','Estatus','Es factura','Importe subtotal','Plazo','Vence','Facturada tarde (lote siguiente)','Fecha de pago','Días de atraso','Semáforo','Detalle','Motivo'];
  const rows=L.map(e=>{const r=e.r;return [r[0],ML[r[2]]||r[2],r[4],r[5],r[6],r[3],r[9],r[9]==='Sí'?r[7]:0,plazoTxt(r),e.t?fdate(e.t):'',r[14]?'Sí':'',r[11]?fdate(r[11]):'',e.a==null?'':e.a,e.sem.l,sitTxt(e),r[8]]});
  saveCsv('Detalle_facturas_'+today()+'.csv',csvText(rows,head))
 }
@@ -473,11 +473,11 @@ const maxCorte=()=>Object.values(D.cfg.cortes).sort().pop();
 const corteOf=e=>st.sem.mode==='fecha'&&st.sem.fecha?st.sem.fecha:(D.cfg.cortes[e]||maxCorte());
 const lateDays=(tent,e)=>Math.round((tms(corteOf(e))-tms(tent))/DAY);
 function semPend(tent,e){
- if(!tent)return {k:'in',l:'Sin vencimiento',a:null,r:3};
+ if(!tent)return {k:'in',l:'Sin fecha de pago',a:null,r:3};
  const d=lateDays(tent,e);
- if(d>st.sem.gracia)return {k:'er',l:'Vencida',a:d,r:0};
- if(-d<=st.sem.prox||d>0)return {k:'wr',l:'Vence pronto',a:Math.max(d,0),r:1};
- return {k:'ok',l:'Por vencer',a:0,r:2};
+ if(d>st.sem.gracia)return {k:'er',l:'Atrasado',a:d,r:0};
+ if(-d<=st.sem.prox||d>0)return {k:'wr',l:'Próximo a vencer',a:Math.max(d,0),r:1};
+ return {k:'ok',l:'Dentro del plazo',a:0,r:2};
 }
 function semRow(r){
  if(r[3]==='Pendiente de pago')return semPend(r[10],r[0]);
@@ -485,12 +485,12 @@ function semRow(r){
  return {k:'na',l:'No aplica',a:null,r:5};
 }
 const semBadge=x=>x.k==='na'?`<span class="badge">${x.l}</span>`:`<span class="badge ${x.k}"><i class="sd"></i>${x.l}</span>`;
-const SEMF=[['er','Vencida'],['wr','Vence pronto'],['ok','Por vencer'],['in','Sin vencimiento']];
+const SEMF=[['er','Atrasado'],['wr','Próximo a vencer'],['ok','Dentro del plazo'],['in','Sin fecha de pago']];
 function semParams(){
  const s=st.sem;
  return `<div class="semp"><div class="t">Parámetros del semáforo</div><div class="dtools" style="margin:0"><label class="fld"><span class="flabel">Corte para calcular atraso</span><select id="sMode"><option value="fuente"${s.mode==='fuente'?' selected':''}>Corte de cada fuente de pago</option><option value="fecha"${s.mode==='fecha'?' selected':''}>Fecha específica</option></select></label>
  <label class="fld"><span class="flabel">Fecha</span><input type="date" id="sFecha" value="${s.fecha||maxCorte()}"${s.mode==='fuente'?' disabled':''}></label>
- <label class="fld"><span class="flabel">Vence pronto (días antes)</span><input type="number" min="0" max="60" id="sProx" value="${s.prox}" style="width:64px"></label>
+ <label class="fld"><span class="flabel">Próximo a vencer (días antes)</span><input type="number" min="0" max="60" id="sProx" value="${s.prox}" style="width:64px"></label>
  <label class="fld"><span class="flabel">Días de gracia</span><input type="number" min="0" max="60" id="sGr" value="${s.gracia}" style="width:64px"></label>
  <button class="ghost" type="button" id="sHoy">Usar hoy</button><button class="ghost" type="button" id="sRst">Restablecer</button></div>
  <div class="hint" style="margin-top:6px">Cortes de las fuentes: SEZA ${fdate(D.cfg.cortes.SEZA)} · SHIP ${fdate(D.cfg.cortes.SHIP)} · GSG ${fdate(D.cfg.cortes.GSG)}. Valores por defecto en la sección <b>cfg</b> de los datos del tablero.</div></div>`;
@@ -508,7 +508,7 @@ const CALX={};D.cal.forEach(c=>CALX[c[0]]=c);
 const empScope=()=>st.emp==='Corporativo'?['SEZA','SHIP','GSG']:[st.emp];
 function calData(){
  const E=empScope(),R=D.cal.map(c=>({c,fact:0,nf:0,pag:0,pen:0,penN:0,rev:0,late:0,sem:null}));const by={};R.forEach(o=>by[o.c[0]]=o);
- const un={fact:0,nf:0,pag:0,pen:0,penN:0,rev:0,sem:{k:'in',l:'Sin vencimiento',a:null,r:3}};
+ const un={fact:0,nf:0,pag:0,pen:0,penN:0,rev:0,sem:{k:'in',l:'Sin fecha de pago',a:null,r:3}};
  const K={er:{n:0,i:0},wr:{n:0,i:0},ok:{n:0,i:0},in:{n:0,i:0}};
  D.calag.filter(a=>E.includes(a[1])).forEach(a=>{
   const o=by[a[0]]||un,s=a[2];o.fact+=a[5];o.nf+=a[4];
@@ -528,7 +528,7 @@ function vbars(items){
   s+=`<text x="${x+w/2}" y="${H-10}" text-anchor="middle">${it.lab}</text><rect class="hit" tabindex="0" x="${L+i*step}" y="${T}" width="${step}" height="${hh}" data-tip="Pago tentativo ${it.lab}||${it.parts.filter(p=>p.v>0).map(p=>p.c+'|'+p.n+'|'+money(p.v)).join('||')}"/>`});
  return s+'</svg>';
 }
-const SEMLAB={er:'Vencida',wr:'Vence pronto',ok:'Por vencer',in:'Sin vencimiento'};
+const SEMLAB={er:'Atrasado',wr:'Próximo a vencer',ok:'Dentro del plazo',in:'Sin fecha de pago'};
 const SEMC={er:'var(--crit)',wr:'var(--c1)',ok:'var(--good)',in:'var(--noer)'};
 function vCal(){
  const {R,un,K}=calData(),E=empScope();
@@ -540,7 +540,7 @@ function vCal(){
  const M={};D.calag.filter(a=>E.includes(a[1])&&a[2]==='Pendiente de pago'&&a[0]!=='Sin asignación').forEach(a=>{const d=CALX[a[0]][8],x=semPend(d,a[1]);M[d]=M[d]||{er:0,wr:0,ok:0,en:{er:0,wr:0,ok:0}};M[d][x.k]+=a[5];M[d].en[x.k]+=a[4]});
  const ds=Object.keys(M).sort();
  const items=ds.map(d=>({lab:fdate(d).slice(0,5),parts:['er','wr','ok'].map(k=>({v:M[d][k],c:SEMC[k],n:SEMLAB[k]}))}));
- const tbl='<table><tr><th>Fecha tentativa de pago</th><th>Vencida</th><th>Vence pronto</th><th>Por vencer</th></tr>'+ds.map(d=>`<tr><td>${fdate(d)}</td><td>${money(M[d].er)}</td><td>${money(M[d].wr)}</td><td>${money(M[d].ok)}</td></tr>`).join('')+'</table>';
+ const tbl='<table><tr><th>Fecha tentativa de pago</th><th>Atrasado</th><th>Próximo a vencer</th><th>Dentro del plazo</th></tr>'+ds.map(d=>`<tr><td>${fdate(d)}</td><td>${money(M[d].er)}</td><td>${money(M[d].wr)}</td><td>${money(M[d].ok)}</td></tr>`).join('')+'</table>';
  h+='<div class="grid">'+chartCard('Pendiente por fecha tentativa de pago','Walmart · '+(st.emp==='Corporativo'?'corporativo':st.emp)+' · importe pendiente según el semáforo',SEMF.slice(0,3).map(([k,l])=>lg(SEMC[k],l)).join(''),vbars(items),tbl,'s12')+'</div>';
  // tabla del calendario
  const fuente=c=>c[9]==='O'?'<span class="badge ok">Oficial</span>':c[9]==='R'?'<span class="badge in">Referencial</span>':'<span class="badge">Proyección</span>';
